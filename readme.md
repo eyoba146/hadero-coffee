@@ -1,1 +1,1 @@
-hader-coffee full stack development
+Hadero Coffee Full-Stack Development
