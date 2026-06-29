@@ -1,0 +1,10 @@
+{
+  "name": "Hadero Coffee",
+  "description": "Digital menu, real-time table ordering, tracking, and staff management system for Hadero Coffee.",
+  "requestFramePermissions": [
+    "camera"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

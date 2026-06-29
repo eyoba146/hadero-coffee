@@ -1,0 +1,126 @@
+{
+  "menu": [
+    {
+      "id": "menu-1",
+      "name": "Hadero Macchiato",
+      "category": "Drinks",
+      "price": 95,
+      "description": "Double espresso shot with velvety micro-foam, layered in traditional Ethiopian style.",
+      "image": "/uploads/placeholder_macchiato.jpg",
+      "available": true
+    },
+    {
+      "id": "menu-2",
+      "name": "Traditional Jebena Coffee",
+      "category": "Drinks",
+      "price": 120,
+      "description": "Freshly roasted, ground, and slow-brewed in a traditional clay Jebena. Served with popcorn.",
+      "image": "/uploads/placeholder_jebena.jpg",
+      "available": true
+    },
+    {
+      "id": "menu-3",
+      "name": "Hadero Special Blend",
+      "category": "Drinks",
+      "price": 85,
+      "description": "Our signature premium medium-dark roast coffee, freshly brewed and full of flavor.",
+      "image": "/uploads/placeholder_blend.jpg",
+      "available": true
+    },
+    {
+      "id": "menu-4",
+      "name": "Caramel Cafe Latte",
+      "category": "Drinks",
+      "price": 110,
+      "description": "Smooth espresso, steamed milk, and a decadent drizzle of caramel syrup.",
+      "image": "/uploads/placeholder_latte.jpg",
+      "available": true
+    },
+    {
+      "id": "menu-5",
+      "name": "Iced Hazelnut Cold Brew",
+      "category": "Drinks",
+      "price": 105,
+      "description": "Hadero cold brew steeped for 16 hours, infused with sweet hazelnut and poured over ice.",
+      "image": "/uploads/placeholder_coldbrew.jpg",
+      "available": true
+    },
+    {
+      "id": "menu-6",
+      "name": "Espresso-Infused Coffee Cake",
+      "category": "Foods",
+      "price": 130,
+      "description": "Moist cake with a strong espresso ribbon, topped with cinnamon-brown sugar streusel and walnuts.",
+      "image": "/uploads/placeholder_cake.jpg",
+      "available": true
+    },
+    {
+      "id": "menu-7",
+      "name": "Hadero Club Sandwich",
+      "category": "Foods",
+      "price": 185,
+      "description": "Double-decker sandwich with roasted chicken, fresh avocado, tomato, cheese, and mustard aioli.",
+      "image": "/uploads/placeholder_club.jpg",
+      "available": true
+    },
+    {
+      "id": "menu-8",
+      "name": "Crispy Beef Sambusa",
+      "category": "Foods",
+      "price": 80,
+      "description": "Three golden-brown crispy pastries filled with spiced minced beef, green chilies, and onions.",
+      "image": "/uploads/placeholder_sambusa.jpg",
+      "available": true
+    }
+  ],
+  "orders": [],
+  "staff": [
+    {
+      "id": "staff-1",
+      "username": "admin",
+      "password": "adminpassword",
+      "role": "admin",
+      "fullName": "Restaurant Admin"
+    },
+    {
+      "id": "staff-2",
+      "username": "waiter",
+      "password": "waiterpassword",
+      "role": "waiter",
+      "fullName": "Staff Waiter"
+    }
+  ],
+  "paymentAccounts": {
+    "cbe": {
+      "name": "Commercial Bank of Ethiopia (CBE)",
+      "accountNumber": "1000456123987",
+      "holder": "Hadero Coffee PLC"
+    },
+    "cbeBirr": {
+      "name": "CBE Birr Wallet",
+      "accountNumber": "*847*1*1*1000456123987#",
+      "merchantCode": "55912",
+      "holder": "Hadero Coffee"
+    },
+    "telebirr": {
+      "name": "Telebirr Merchant",
+      "accountNumber": "0911776655",
+      "merchantCode": "88734",
+      "holder": "Hadero Coffee PLC"
+    },
+    "cash": {
+      "name": "Cash on Delivery",
+      "description": "Pay cash directly to the waiter after they serve your order."
+    }
+  },
+  "images": [
+    "/uploads/placeholder_macchiato.jpg",
+    "/uploads/placeholder_jebena.jpg",
+    "/uploads/placeholder_blend.jpg",
+    "/uploads/placeholder_latte.jpg",
+    "/uploads/placeholder_coldbrew.jpg",
+    "/uploads/placeholder_cake.jpg",
+    "/uploads/placeholder_club.jpg",
+    "/uploads/placeholder_sambusa.jpg"
+  ]
+}

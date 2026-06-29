@@ -1,0 +1,178 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=Outfit:wght@500;600;700;800;900&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Outfit", ui-serif, Georgia, serif;
+  
+  --color-hadero-gold: #9B9B45;
+  --color-hadero-cream: #FAF7F2;
+  --color-hadero-dark: #2A1D15;
+}
+
+body {
+  background-color: #FAF7F2;
+  color: #2A1D15;
+  font-family: var(--font-sans);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Custom scrollbars for the premium app aesthetic */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #FAF7F2;
+}
+::-webkit-scrollbar-thumb {
+  background: #9B9B45;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #808038;
+}
+
+/* --- 10x PREMIUM DARK MODE STYLING --- */
+body.dark {
+  background-color: #0D100D;
+  color: #FAFDF9;
+}
+
+body.dark ::-webkit-scrollbar-track {
+  background: #0D100D;
+}
+
+body.dark {
+  /* Typography overrides */
+  .text-hadero-dark, 
+  .text-gray-900, 
+  .text-gray-800, 
+  .text-gray-700,
+  h1, h2, h3, h4, h5, h6 {
+    color: #FAFDF9 !important;
+  }
+
+  .text-gray-600, 
+  .text-gray-500 {
+    color: #A0B09C !important;
+  }
+
+  .text-gray-400 {
+    color: #778A73 !important;
+  }
+
+  /* Selection colors */
+  &::selection {
+    background-color: #9B9B45;
+    color: #0D100D;
+  }
+
+  /* Background overrides */
+  .bg-white {
+    background-color: #161B15 !important;
+  }
+  
+  .bg-white\/60 {
+    background-color: rgba(22, 27, 21, 0.75) !important;
+  }
+
+  .bg-hadero-cream {
+    background-color: #0D100D !important;
+  }
+
+  .bg-hadero-cream\/40 {
+    background-color: rgba(13, 16, 13, 0.5) !important;
+  }
+
+  .bg-gray-50, 
+  .bg-gray-100 {
+    background-color: #1D241C !important;
+  }
+
+  /* Borders - Soften to elegant dark forest/olive values */
+  .border,
+  .border-gray-100, 
+  .border-gray-200, 
+  .border-gray-300,
+  .border-hadero-gold\/20, 
+  .border-hadero-gold\/15, 
+  .border-hadero-gold\/10, 
+  .border-[#9B9B45]\/20, 
+  .border-[#9B9B45]\/15,
+  .border-hadero-dark\/20 {
+    border-color: #262E25 !important;
+  }
+
+  /* Specific high-contrast badges & elements */
+  .bg-hadero-dark {
+    background-color: #9B9B45 !important;
+    color: #0D100D !important;
+  }
+  
+  .text-hadero-cream {
+    color: #0D100D !important;
+  }
+
+  /* For dark background buttons we need them to look luxurious gold */
+  button.bg-hadero-dark,
+  a.bg-hadero-dark {
+    background-color: #9B9B45 !important;
+    color: #FAF7F2 !important;
+  }
+  button.bg-hadero-dark:hover,
+  a.bg-hadero-dark:hover {
+    background-color: #B4B455 !important;
+    color: #0D100D !important;
+  }
+
+  /* Input, Textareas and Dropdowns */
+  input, 
+  textarea, 
+  select {
+    background-color: #111410 !important;
+    border-color: #2A3429 !important;
+    color: #FAFDF9 !important;
+  }
+
+  input:focus, 
+  textarea:focus, 
+  select:focus {
+    border-color: #9B9B45 !important;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(155, 155, 69, 0.25) !important;
+  }
+
+  input::placeholder, 
+  textarea::placeholder {
+    color: #556652 !important;
+  }
+
+  /* Cart & Modals */
+  .bg-black\/50, .bg-black\/40 {
+    background-color: rgba(0, 0, 0, 0.8) !important;
+  }
+
+  /* Special active navigation indicators */
+  .text-hadero-gold {
+    color: #9B9B45 !important;
+  }
+
+  /* Specific Customer Footer readability enhancement */
+  #customer-footer p.font-serif {
+    color: #FAFDF9 !important;
+  }
+  #customer-footer p.text-gray-500 {
+    color: #A0B09C !important;
+  }
+  #customer-footer p.text-gray-400 {
+    color: #384637 !important; /* Low-contrast elegant dark shade for copyright text in dark mode */
+  }
+
+  /* Staff portal badge override */
+  #staff-portal-badge {
+    background-color: #1A2219 !important;
+    color: #9B9B45 !important;
+    border: 1px solid rgba(155, 155, 69, 0.2) !important;
+  }
+}
