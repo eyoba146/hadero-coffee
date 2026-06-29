@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Lock, User, Eye, EyeOff, AlertTriangle, Coffee, Sparkles, KeyRound } from "lucide-react";
+import { motion } from "motion/react";
 
 interface StaffLoginProps {
   onLoginSuccess: (user: { id: string; username: string; role: "admin" | "waiter"; fullName: string }) => void;
@@ -56,7 +57,14 @@ export default function StaffLogin({ onLoginSuccess, onCancel }: StaffLoginProps
   };
 
   return (
-    <div className="min-h-[75vh] flex items-center justify-center px-4" id="staff-login-view">
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -12 }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
+      className="min-h-[75vh] flex items-center justify-center px-4"
+      id="staff-login-view"
+    >
       <div className="bg-white border-2 border-hadero-dark/80 p-8 md:p-10 rounded-3xl shadow-xl max-w-md w-full relative overflow-hidden">
         {/* Decorative background blend */}
         <div className="absolute -top-12 -right-12 w-32 h-32 bg-hadero-gold/10 rounded-full blur-2xl pointer-events-none" />
@@ -155,6 +163,6 @@ export default function StaffLogin({ onLoginSuccess, onCancel }: StaffLoginProps
           Cancel and return to menu
         </button>
       </div>
-    </div>
+    </motion.div>
   );
 }

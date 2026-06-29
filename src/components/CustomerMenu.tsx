@@ -274,7 +274,14 @@ export default function CustomerMenu({ tableNumber, onSelectTable, onOrderPlaced
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-6" id="digital-menu-view">
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -12 }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
+      className="max-w-6xl mx-auto px-4 py-6"
+      id="digital-menu-view"
+    >
       {/* Menu Header / Welcome banner */}
       <div className="mb-6 sm:mb-8 bg-white border border-hadero-gold/20 text-hadero-dark p-5 sm:p-6 md:p-8 rounded-3xl relative overflow-hidden flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div className="relative z-10">
@@ -350,7 +357,16 @@ export default function CustomerMenu({ tableNumber, onSelectTable, onOrderPlaced
               <motion.div
                 layout
                 key={item.id}
-                className="bg-white border border-hadero-gold/15 rounded-[2.25rem] overflow-hidden shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col h-full group relative"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                whileHover={{ 
+                  y: -8, 
+                  scale: 1.015,
+                  boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.08)"
+                }}
+                transition={{ duration: 0.35, ease: "easeOut" }}
+                className="bg-white border border-hadero-gold/15 rounded-[2.25rem] overflow-hidden shadow-md flex flex-col h-full group relative"
                 id={`menu-item-card-${item.id}`}
               >
                 {/* Clickable Image & Info overlay */}
@@ -924,6 +940,6 @@ export default function CustomerMenu({ tableNumber, onSelectTable, onOrderPlaced
           );
         })()}
       </AnimatePresence>
-    </div>
+    </motion.div>
   );
 }

@@ -37,6 +37,7 @@ body {
 body.dark {
   background-color: #0D100D;
   color: #FAFDF9;
+  --color-hadero-cream: #0D100D;
 }
 
 body.dark ::-webkit-scrollbar-track {
