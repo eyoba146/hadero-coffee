@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import QRCode from "qrcode";
 import { MenuItem, Staff } from "../types";
 import { 
   Coffee, Users, Lock, QrCode, Plus, Edit, Trash2, Camera, Upload, Image as ImageIcon,
@@ -52,6 +53,12 @@ export default function AdminDashboard({ staffUser, onLogout }: AdminDashboardPr
   const [selfPwdError, setSelfPwdError] = useState<string | null>(null);
   const [selfPwdSuccess, setSelfPwdSuccess] = useState<string | null>(null);
 
+  // Dynamic QR settings state
+  const [qrTargetUrl, setQrTargetUrl] = useState<string>("");
+  const [isSavingQrUrl, setIsSavingQrUrl] = useState<boolean>(false);
+  const [qrUrlError, setQrUrlError] = useState<string | null>(null);
+  const [qrDataUrl, setQrDataUrl] = useState<string>("");
+
   // Image upload and capture modals
   const [isImagePickerOpen, setIsImagePickerOpen] = useState<boolean>(false);
   const [serverImages, setServerImages] = useState<string[]>([]);
@@ -87,10 +94,44 @@ export default function AdminDashboard({ staffUser, onLogout }: AdminDashboardPr
       .catch((err) => console.error("Error loading images:", err));
   };
 
+  const loadSettings = () => {
+    fetch("/api/settings")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && data.qrTargetUrl) {
+          setQrTargetUrl(data.qrTargetUrl);
+        } else {
+          setQrTargetUrl(window.location.origin + "/");
+        }
+      })
+      .catch((err) => console.error("Error loading settings:", err));
+  };
+
+  useEffect(() => {
+    if (qrTargetUrl) {
+      QRCode.toDataURL(qrTargetUrl, {
+        width: 400,
+        margin: 2,
+        errorCorrectionLevel: "H",
+        color: {
+          dark: "#1F1F1F",
+          light: "#FFFFFF"
+        }
+      })
+        .then((url) => {
+          setQrDataUrl(url);
+        })
+        .catch((err) => {
+          console.error("Failed to generate QR data URL:", err);
+        });
+    }
+  }, [qrTargetUrl]);
+
   useEffect(() => {
     loadMenu();
     loadStaff();
     loadImagesGallery();
+    loadSettings();
   }, []);
 
   const triggerNotification = (text: string, type: "success" | "error" = "success") => {
@@ -435,6 +476,226 @@ export default function AdminDashboard({ staffUser, onLogout }: AdminDashboardPr
     }
   };
 
+  const handleSaveQrUrl = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSavingQrUrl(true);
+    setQrUrlError(null);
+
+    const trimmedUrl = qrTargetUrl.trim();
+    if (!trimmedUrl) {
+      setQrUrlError("QR target URL cannot be empty.");
+      setIsSavingQrUrl(false);
+      return;
+    }
+
+    // Automatically clean any staff-related subpaths or query parameters
+    let cleanedUrl = trimmedUrl;
+    if (!/^https?:\/\//i.test(cleanedUrl)) {
+      cleanedUrl = "http://" + cleanedUrl;
+    }
+
+    try {
+      const urlObj = new URL(cleanedUrl);
+      
+      // Remove query parameters like staff, portal, login, admin, waiter
+      const paramsToRemove = ["staff", "portal", "login", "admin", "waiter"];
+      paramsToRemove.forEach((param) => {
+        urlObj.searchParams.delete(param);
+      });
+      
+      // Clean pathname: split by "/" and filter out staff-related path segments
+      const segments = urlObj.pathname.split("/");
+      const cleanSegments = segments.filter((seg) => {
+        const lower = seg.toLowerCase();
+        return lower !== "staff" && lower !== "portal" && lower !== "login" && lower !== "admin" && lower !== "waiter";
+      });
+      urlObj.pathname = cleanSegments.join("/") || "/";
+      
+      cleanedUrl = urlObj.toString();
+    } catch (e) {
+      // Basic fallback cleaning if URL parsing fails
+      cleanedUrl = trimmedUrl
+        .replace(/[\?&](portal|staff|login|admin|waiter)(=?[^&]*)/gi, "")
+        .replace(/\/(staff|portal|login|admin|waiter)\b/gi, "");
+    }
+
+    const wasCleaned = cleanedUrl.toLowerCase() !== trimmedUrl.toLowerCase();
+
+    try {
+      const res = await fetch("/api/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ qrTargetUrl: cleanedUrl })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setQrTargetUrl(data.qrTargetUrl);
+        if (wasCleaned) {
+          triggerNotification("Staff parameters removed, and clean URL saved successfully!", "success");
+        } else {
+          triggerNotification("QR Target URL saved successfully!");
+        }
+      } else {
+        setQrUrlError(data.message || "Failed to save settings.");
+        triggerNotification(data.message || "Error saving settings.", "error");
+      }
+    } catch (err) {
+      setQrUrlError("Connection issue. Please try again.");
+      triggerNotification("Network connection failure", "error");
+    } finally {
+      setIsSavingQrUrl(false);
+    }
+  };
+
+  const printQrSignageCard = () => {
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) {
+      triggerNotification("Pop-up blocked! Please allow pop-ups to print signage.", "error");
+      return;
+    }
+    
+    const qrCodeUrl = qrDataUrl || `/api/settings/qr-image?t=${Date.now()}`;
+
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Print QR Signage - Hadero Coffee</title>
+          <style>
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;0,900;1,700&display=swap');
+            body {
+              background-color: #ffffff;
+              color: #1F1F1F;
+              font-family: 'Inter', sans-serif;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              height: 100vh;
+              margin: 0;
+              padding: 0;
+              box-sizing: border-box;
+            }
+            .card {
+              border: 3px solid #1F1F1F;
+              border-radius: 40px;
+              padding: 50px;
+              text-align: center;
+              max-width: 420px;
+              width: 100%;
+              position: relative;
+              background: #ffffff;
+              box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            }
+            .inner-border {
+              position: absolute;
+              top: 12px;
+              left: 12px;
+              right: 12px;
+              bottom: 12px;
+              border: 1px solid #9B9B45;
+              border-radius: 32px;
+              pointer-events: none;
+              opacity: 0.3;
+            }
+            .title-brand {
+              font-family: 'Playfair Display', serif;
+              font-size: 42px;
+              font-weight: 900;
+              text-transform: uppercase;
+              letter-spacing: -0.02em;
+              margin: 0;
+            }
+            .sub-brand {
+              font-size: 11px;
+              font-weight: 700;
+              text-transform: uppercase;
+              letter-spacing: 0.2em;
+              color: #ffffff;
+              background-color: #1F1F1F;
+              padding: 6px 20px;
+              border-radius: 30px;
+              display: inline-block;
+              margin-top: 10px;
+            }
+            .qr-container {
+              margin: 40px auto;
+              background-color: #FAFDF9;
+              padding: 24px;
+              border-radius: 24px;
+              border: 1px solid rgba(155, 155, 70, 0.15);
+              width: 250px;
+              height: 250px;
+              box-sizing: border-box;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+            }
+            .qr-image {
+              width: 200px;
+              height: 200px;
+              object-fit: contain;
+            }
+            .scan-instructions {
+              font-size: 14px;
+              color: #9B9B45;
+              font-weight: 700;
+              text-transform: uppercase;
+              letter-spacing: 0.15em;
+              margin-bottom: 8px;
+            }
+            .menu-heading {
+              font-family: 'Playfair Display', serif;
+              font-size: 32px;
+              font-weight: 900;
+              margin: 0 0 12px 0;
+            }
+            .subtext {
+              font-size: 11px;
+              color: #6B7280;
+              margin: 0;
+            }
+            @media print {
+              body {
+                height: auto;
+              }
+              .card {
+                box-shadow: none;
+                border-width: 3px;
+              }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="card">
+            <div class="inner-border"></div>
+            <div>
+              <h1 class="title-brand">Hadero</h1>
+              <span class="sub-brand">Coffee</span>
+            </div>
+            
+            <div class="qr-container">
+              <img src="${qrCodeUrl}" alt="QR Code" class="qr-image" />
+            </div>
+
+            <div>
+              <div class="scan-instructions">Scan to Browse & Order</div>
+              <h2 class="menu-heading">Digital Menu</h2>
+              <p class="subtext">Browse our menu and place order directly. Scan with your smartphone camera.</p>
+            </div>
+          </div>
+
+          <script>
+            window.onload = function() {
+              window.print();
+              setTimeout(function() { window.close(); }, 500);
+            };
+          </script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+    triggerNotification("Print sheet loaded. Printing started.");
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 py-6" id="admin-dashboard-view">
       {/* Toast Notification */}
@@ -463,7 +724,7 @@ export default function AdminDashboard({ staffUser, onLogout }: AdminDashboardPr
             Hadero Administrator Portal
           </span>
           <h1 className="font-serif text-2xl sm:text-3xl font-bold text-hadero-dark mt-2.5 sm:mt-3 tracking-tight">System Administration</h1>
-          <p className="text-[11px] sm:text-xs text-gray-500 font-serif italic mt-1">Configure menus, staff records, printable tables, and live order dispatches.</p>
+          <p className="text-[11px] sm:text-xs text-gray-500 font-serif italic mt-1">Configure menus, staff records, digital menu QR codes, and live order dispatches.</p>
         </div>
 
         {/* Action controls */}
@@ -508,7 +769,7 @@ export default function AdminDashboard({ staffUser, onLogout }: AdminDashboardPr
           { id: "LiveDispatcher", label: "Live Orders", icon: Coffee },
           { id: "ManageMenu", label: "Manage Menu", icon: Edit },
           { id: "StaffAccounts", label: "Staff Accounts", icon: Users },
-          { id: "QRSignage", label: "Digital QR Signs", icon: QrCode }
+          { id: "QRSignage", label: "Menu QR Code", icon: QrCode }
         ].map((tab) => {
           const Icon = tab.icon;
           const isActive = activePanel === tab.id;
@@ -728,67 +989,210 @@ export default function AdminDashboard({ staffUser, onLogout }: AdminDashboardPr
       )}
 
       {/* --------------------------------------------------
-          PANEL 4: DIGITAL QR TABLE SIGNAGE GENERATOR
+          PANEL 4: DIGITAL QR MENU SIGNAGE GENERATOR
           -------------------------------------------------- */}
       {activePanel === "QRSignage" && (
         <div className="space-y-6" id="panel-qr-signage">
           <div className="bg-white p-6 border border-hadero-gold/20 rounded-2xl shadow-sm">
-            <h2 className="font-serif text-xl font-bold text-hadero-dark">Table Ordering Signage Sheet</h2>
+            <h2 className="font-serif text-xl font-bold text-hadero-dark">Digital Menu QR Configuration &amp; Signage</h2>
             <p className="text-xs text-gray-500 font-serif italic mt-1 max-w-2xl">
-              Print these table signage cards and display them on your restaurant tables. 
-              Customers scan the unique QR code, which instantly directs them to your digital menu pre-set for their specific table.
+              Configure your master digital menu destination link and generate beautifully designed, high-resolution signage cards. 
+              Customers scan this code to browse items and place orders directly with baristas.
             </p>
           </div>
 
-          {/* Printable Layout Sheet */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="qr-signage-cards">
-            {[1, 2, 3, 4, 5, 6].map((tableNum) => {
-              const appUrl = window.location.origin + "/?table=" + tableNum;
-              const qrCodeUrl = `https://chart.googleapis.com/chart?chs=250x250&cht=qr&chl=${encodeURIComponent(appUrl)}`;
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            {/* Configuration Form Column */}
+            <div className="lg:col-span-5 space-y-6">
+              <form onSubmit={handleSaveQrUrl} className="bg-white border-2 border-hadero-dark/10 p-6 rounded-3xl shadow-sm space-y-4">
+                <div>
+                  <h3 className="font-serif text-lg font-bold text-hadero-dark flex items-center gap-2">
+                    <QrCode size={18} className="text-hadero-gold" />
+                    Configure Destination Link
+                  </h3>
+                  <p className="text-[11px] text-gray-400 mt-1 leading-relaxed">
+                    Paste or type the URL your customer should land on when scanning. This is saved to the database.
+                  </p>
+                </div>
 
-              return (
-                <div 
-                  key={tableNum}
-                  className="bg-white border-2 border-hadero-dark/40 p-6 rounded-3xl shadow-md text-center relative overflow-hidden flex flex-col items-center justify-between min-h-[380px] hover:border-hadero-gold transition-all"
-                  id={`qr-table-card-${tableNum}`}
-                >
-                  {/* Card Border frame branding */}
-                  <div className="absolute top-2 left-2 right-2 bottom-2 border border-hadero-gold/20 pointer-events-none rounded-2xl opacity-60" />
-
-                  {/* Card Header logo */}
-                  <div>
-                    <span className="font-serif text-2xl font-black text-hadero-dark tracking-tight block uppercase">
-                      Hadero
-                    </span>
-                    <span className="text-[9px] font-bold uppercase tracking-widest text-hadero-cream bg-hadero-dark px-3 py-1 rounded-full inline-block mt-1.5">
-                      Coffee
-                    </span>
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-600">
+                      QR Target URL Link
+                    </label>
+                    <button
+                      type="button"
+                      id="autofill-app-url-btn"
+                      onClick={() => {
+                        let currentUrl = window.location.href;
+                        try {
+                          const urlObj = new URL(currentUrl);
+                          const paramsToRemove = ["staff", "portal", "login", "admin", "waiter"];
+                          paramsToRemove.forEach(p => urlObj.searchParams.delete(p));
+                          const segments = urlObj.pathname.split("/");
+                          const cleanSegments = segments.filter(seg => {
+                            const lower = seg.toLowerCase();
+                            return lower !== "staff" && lower !== "portal" && lower !== "login" && lower !== "admin" && lower !== "waiter";
+                          });
+                          urlObj.pathname = cleanSegments.join("/") || "/";
+                          const cleaned = urlObj.toString();
+                          setQrTargetUrl(cleaned);
+                          triggerNotification("Autofilled with clean visitor link!", "success");
+                        } catch (e) {
+                          setQrTargetUrl(window.location.origin + "/");
+                          triggerNotification("Autofilled with origin URL!", "success");
+                        }
+                      }}
+                      className="text-[10px] font-bold text-hadero-gold hover:underline flex items-center gap-1 focus:outline-none cursor-pointer"
+                    >
+                      📋 Copy Current App Link
+                    </button>
                   </div>
-
-                  {/* The Live QR Code (Google Chart API) */}
-                  <div className="my-5 bg-hadero-cream p-4 rounded-2xl border border-hadero-gold/15 shadow-sm relative group">
-                    <img 
-                      src={qrCodeUrl} 
-                      alt={`Table ${tableNum} QR Code`} 
-                      className="w-36 h-36 object-contain mx-auto"
-                    />
-                    <div className="absolute inset-0 bg-white/95 opacity-0 group-hover:opacity-100 flex flex-col justify-center items-center p-3 text-center transition-all duration-300 rounded-2xl">
-                      <span className="text-[9px] uppercase font-bold text-gray-400">Target Address</span>
-                      <span className="text-[9px] font-mono font-medium text-gray-600 break-all leading-normal mt-1 px-1">
-                        {appUrl}
-                      </span>
+                  <input
+                    id="qr-target-url-input"
+                    type="url"
+                    placeholder="e.g. https://hadero.example.com/"
+                    value={qrTargetUrl}
+                    onChange={(e) => {
+                      let val = e.target.value;
+                      if (/[\?&](portal|staff|login|admin|waiter)/i.test(val) || /\/(staff|portal|login|admin|waiter)\b/i.test(val)) {
+                        try {
+                          const urlObj = new URL(val);
+                          const paramsToRemove = ["staff", "portal", "login", "admin", "waiter"];
+                          paramsToRemove.forEach(p => urlObj.searchParams.delete(p));
+                          const segments = urlObj.pathname.split("/");
+                          const cleanSegments = segments.filter(seg => {
+                            const lower = seg.toLowerCase();
+                            return lower !== "staff" && lower !== "portal" && lower !== "login" && lower !== "admin" && lower !== "waiter";
+                          });
+                          urlObj.pathname = cleanSegments.join("/") || "/";
+                          val = urlObj.toString();
+                          triggerNotification("Automatically removed staff parameters for customer safety!", "success");
+                        } catch (err) {
+                          val = val
+                            .replace(/[\?&](portal|staff|login|admin|waiter)(=?[^&]*)/gi, "")
+                            .replace(/\/(staff|portal|login|admin|waiter)\b/gi, "");
+                          triggerNotification("Cleaned staff parameters from text input!", "success");
+                        }
+                      }
+                      setQrTargetUrl(val);
+                    }}
+                    className="w-full bg-hadero-cream border border-[#9B9B45]/35 text-hadero-dark rounded-xl px-4 py-2.5 focus:outline-none focus:ring-1 focus:ring-hadero-gold text-xs font-mono"
+                    required
+                  />
+                  
+                  {qrUrlError && (
+                    <div className="flex items-start gap-1.5 text-red-500 mt-1 bg-red-50 border border-red-200 p-2.5 rounded-xl">
+                      <AlertCircle size={14} className="shrink-0 mt-0.5" />
+                      <span className="text-[10px] font-medium leading-normal">{qrUrlError}</span>
                     </div>
-                  </div>
+                  )}
 
-                  {/* Card Table Title */}
-                  <div className="space-y-1 z-10">
-                    <span className="text-[10px] text-hadero-gold font-bold block uppercase tracking-widest">Scan to Order</span>
-                    <h3 className="font-serif text-3xl font-black text-hadero-dark">TABLE {tableNum}</h3>
-                    <p className="text-[10px] text-gray-400">Order sent directly to baristas. Pay via Mobile Money.</p>
+                  <div className="bg-amber-50 border border-amber-200/50 p-3 rounded-xl text-[10px] text-amber-700 leading-normal space-y-1">
+                    <span className="font-bold uppercase tracking-wider block text-[9px] text-amber-800">🔒 Security Validation Notice</span>
+                    <p>
+                      For visitor security, the system blocks URLs containing keywords like <strong className="font-semibold">"staff"</strong>, <strong className="font-semibold">"portal"</strong>, or <strong className="font-semibold">"login"</strong>. Ensure you provide the clean customer-facing homepage link.
+                    </p>
                   </div>
                 </div>
-              );
-            })}
+
+                <button
+                  id="save-qr-settings-btn"
+                  type="submit"
+                  disabled={isSavingQrUrl}
+                  className="w-full bg-[#1F1F1F] text-white hover:bg-hadero-gold hover:text-[#1F1F1F] disabled:opacity-50 transition-colors duration-300 rounded-full py-3 text-[10px] uppercase tracking-[0.2em] font-bold flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  {isSavingQrUrl ? (
+                    <span>Saving Settings...</span>
+                  ) : (
+                    <>
+                      <Save size={14} />
+                      Save &amp; Update QR Code
+                    </>
+                  )}
+                </button>
+              </form>
+
+              {/* Printing & Downloading Card Actions */}
+              <div className="bg-hadero-cream/50 border border-[#9B9B45]/20 p-6 rounded-3xl space-y-4">
+                <div>
+                  <h4 className="font-serif text-sm font-bold text-hadero-dark">Quick Printing &amp; Downloads</h4>
+                  <p className="text-[10px] text-gray-400 mt-0.5">Choose how you want to deploy the menu QR code.</p>
+                </div>
+
+                <div className="space-y-2">
+                  <a
+                    id="download-qr-image-link"
+                    href={`/api/settings/download-qr?t=${Date.now()}`}
+                    download="hadero_coffee_menu_qr.png"
+                    className="w-full bg-white hover:bg-hadero-dark hover:text-white transition-all duration-300 border-2 border-hadero-dark/80 text-hadero-dark rounded-full py-3 text-[10px] uppercase tracking-[0.2em] font-bold flex items-center justify-center gap-2 text-center"
+                  >
+                    <Upload size={14} className="rotate-180" />
+                    Download QR Image File
+                  </a>
+
+                  <button
+                    id="print-qr-signage-btn"
+                    onClick={printQrSignageCard}
+                    className="w-full bg-[#1F1F1F] text-white hover:bg-[#9B9B45] transition-colors duration-300 rounded-full py-3 text-[10px] uppercase tracking-[0.2em] font-bold flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <Power size={14} className="rotate-90" />
+                    Print Table Signage Card
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Live Visual Card Preview Column */}
+            <div className="lg:col-span-7 flex flex-col items-center">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">Live Signage Sheet Preview</span>
+              {(() => {
+                const appUrl = qrTargetUrl || window.location.origin + "/";
+                const qrCodeUrl = qrDataUrl || `/api/settings/qr-image?t=${Date.now()}`;
+
+                return (
+                  <div 
+                    className="bg-white border-2 border-hadero-dark/40 p-8 rounded-3xl shadow-lg text-center relative overflow-hidden flex flex-col items-center justify-between min-h-[420px] max-w-md w-full hover:border-hadero-gold transition-all"
+                    id="qr-menu-card"
+                  >
+                    {/* Card Border frame branding */}
+                    <div className="absolute top-2 left-2 right-2 bottom-2 border border-hadero-gold/20 pointer-events-none rounded-2xl opacity-60" />
+
+                    {/* Card Header logo */}
+                    <div>
+                      <span className="font-serif text-3xl font-black text-hadero-dark tracking-tight block uppercase">
+                        Hadero
+                      </span>
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-hadero-cream bg-hadero-dark px-4 py-1 rounded-full inline-block mt-2">
+                        Coffee
+                      </span>
+                    </div>
+
+                    {/* The Live QR Code (Google Chart API) */}
+                    <div className="my-6 bg-hadero-cream p-5 rounded-2xl border border-hadero-gold/15 shadow-sm relative group">
+                      <img 
+                        src={qrCodeUrl} 
+                        alt="Hadero Coffee Menu QR Code" 
+                        className="w-44 h-44 object-contain mx-auto"
+                      />
+                      <div className="absolute inset-0 bg-white/95 opacity-0 group-hover:opacity-100 flex flex-col justify-center items-center p-3 text-center transition-all duration-300 rounded-2xl">
+                        <span className="text-[9px] uppercase font-bold text-gray-400 font-sans">Active Link</span>
+                        <span className="text-[10px] font-mono font-medium text-gray-600 break-all leading-normal mt-1 px-2">
+                          {appUrl}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Card Table Title */}
+                    <div className="space-y-1.5 z-10">
+                      <span className="text-xs text-hadero-gold font-bold block uppercase tracking-widest">Scan to Browse &amp; Order</span>
+                      <h3 className="font-serif text-2xl font-black text-hadero-dark">DIGITAL MENU</h3>
+                      <p className="text-[10px] text-gray-400">Order sent directly to baristas. Pay via Mobile Money.</p>
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
           </div>
         </div>
       )}

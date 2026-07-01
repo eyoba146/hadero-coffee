@@ -3,6 +3,7 @@ import fs from "fs";
 import path from "path";
 import multer from "multer";
 import { createServer as createViteServer } from "vite";
+import QRCode from "qrcode";
 
 const DB_PATH = path.join(process.cwd(), "data", "db.json");
 const UPLOADS_DIR = path.join(process.cwd(), "public", "uploads");
@@ -26,11 +27,18 @@ function loadDb() {
       if (!data.staff) {
         data.staff = [];
       }
+      if (!data.settings) {
+        data.settings = { qrTargetUrl: "" };
+      }
       
       const adminExists = data.staff.some((s: any) => s.username === "admin");
       const waiterExists = data.staff.some((s: any) => s.username === "waiter");
       
       let modified = false;
+      if (!data.settings.qrTargetUrl) {
+        data.settings = { qrTargetUrl: "" };
+        modified = true;
+      }
       if (!adminExists) {
         data.staff.push({
           id: "staff-1",
@@ -92,7 +100,8 @@ function loadDb() {
       }
     ],
     paymentAccounts: {},
-    images: []
+    images: [],
+    settings: { qrTargetUrl: "" }
   };
 }
 
@@ -620,6 +629,111 @@ async function startServer() {
   app.get("/api/payment-accounts", (req, res) => {
     const db = loadDb();
     return res.json(db.paymentAccounts);
+  });
+
+  // 18. Retrieve global settings (like dynamic QR target URL)
+  app.get("/api/settings", (req, res) => {
+    const db = loadDb();
+    const defaultUrl = `${req.protocol}://${req.get("host")}/`;
+    const qrTargetUrl = db.settings?.qrTargetUrl || defaultUrl;
+    return res.json({ qrTargetUrl });
+  });
+
+  // 19. Server-side proxy for downloading the Hadero Coffee Menu QR image (pure Node, offline-first)
+  app.get("/api/settings/download-qr", async (req, res) => {
+    const db = loadDb();
+    const defaultUrl = `${req.protocol}://${req.get("host")}/`;
+    const targetUrl = db.settings?.qrTargetUrl || defaultUrl;
+
+    try {
+      const buffer = await QRCode.toBuffer(targetUrl, {
+        width: 600,
+        margin: 2,
+        errorCorrectionLevel: "H",
+        color: {
+          dark: "#1F1F1F",
+          light: "#FFFFFF"
+        }
+      });
+      res.setHeader("Content-Type", "image/png");
+      res.setHeader("Content-Disposition", "attachment; filename=hadero_coffee_menu_qr.png");
+      return res.send(buffer);
+    } catch (err) {
+      console.error("Error generating QR on server:", err);
+      return res.status(500).json({ success: false, message: "Failed to generate QR image." });
+    }
+  });
+
+  // 19.1 endpoint to get live QR image as an image response (highly reliable)
+  app.get("/api/settings/qr-image", async (req, res) => {
+    const db = loadDb();
+    const defaultUrl = `${req.protocol}://${req.get("host")}/`;
+    const targetUrl = db.settings?.qrTargetUrl || defaultUrl;
+
+    try {
+      const buffer = await QRCode.toBuffer(targetUrl, {
+        width: 300,
+        margin: 2,
+        errorCorrectionLevel: "Q"
+      });
+      res.setHeader("Content-Type", "image/png");
+      return res.send(buffer);
+    } catch (err) {
+      console.error("Error rendering QR image:", err);
+      return res.status(500).json({ success: false, message: "Error rendering QR code." });
+    }
+  });
+
+  // 20. Update global settings with strict security parameters validation and auto-cleaning
+  app.post("/api/settings", (req, res) => {
+    const { qrTargetUrl } = req.body;
+    if (!qrTargetUrl || typeof qrTargetUrl !== "string") {
+      return res.status(400).json({ success: false, message: "A valid QR Target URL string is required." });
+    }
+
+    let trimmedUrl = qrTargetUrl.trim();
+    if (!/^https?:\/\//i.test(trimmedUrl)) {
+      trimmedUrl = "http://" + trimmedUrl;
+    }
+
+    let cleanedUrl = trimmedUrl;
+    try {
+      const urlObj = new URL(trimmedUrl);
+      
+      // Remove query parameters like staff, portal, login, admin, waiter
+      const paramsToRemove = ["staff", "portal", "login", "admin", "waiter"];
+      paramsToRemove.forEach((param) => {
+        urlObj.searchParams.delete(param);
+      });
+      
+      // Clean pathname: split by "/" and filter out staff-related path segments
+      const segments = urlObj.pathname.split("/");
+      const cleanSegments = segments.filter((seg) => {
+        const lower = seg.toLowerCase();
+        return lower !== "staff" && lower !== "portal" && lower !== "login" && lower !== "admin" && lower !== "waiter";
+      });
+      urlObj.pathname = cleanSegments.join("/") || "/";
+      
+      cleanedUrl = urlObj.toString();
+    } catch (e) {
+      // Basic fallback cleaning if URL parsing fails
+      cleanedUrl = trimmedUrl
+        .replace(/[\?&](portal|staff|login|admin|waiter)(=?[^&]*)/gi, "")
+        .replace(/\/(staff|portal|login|admin|waiter)\b/gi, "");
+    }
+
+    const db = loadDb();
+    db.settings = {
+      ...db.settings,
+      qrTargetUrl: cleanedUrl
+    };
+    saveDb(db);
+
+    return res.json({ 
+      success: true, 
+      message: "QR target URL cleaned and updated successfully!", 
+      qrTargetUrl: cleanedUrl 
+    });
   });
 
   // --------------------------------------------------

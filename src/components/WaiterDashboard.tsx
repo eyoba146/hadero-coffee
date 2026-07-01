@@ -351,7 +351,7 @@ export default function WaiterDashboard({ staffUser, onLogout, isAdmin = false }
                         </span>
                       </div>
                       <span className="text-xs font-semibold text-gray-500 block mt-1 font-serif italic">
-                        Table {order.table} &bull; Placed {getElapsedTime(order.createdAt)}
+                        Placed {getElapsedTime(order.createdAt)}
                       </span>
                     </div>
                     <span className="text-[10px] font-mono text-gray-400">

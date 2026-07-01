@@ -5,18 +5,16 @@ import { motion, AnimatePresence } from "motion/react";
 
 interface CustomerMenuProps {
   tableNumber: string | null;
-  onSelectTable: (table: string) => void;
   onOrderPlaced: (orderId: string) => void;
 }
 
-export default function CustomerMenu({ tableNumber, onSelectTable, onOrderPlaced }: CustomerMenuProps) {
+export default function CustomerMenu({ tableNumber, onOrderPlaced }: CustomerMenuProps) {
   const [menu, setMenu] = useState<MenuItem[]>([]);
   const [categories, setCategories] = useState<string[]>(["All", "Drinks", "Foods"]);
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState<boolean>(false);
-  const [tempTable, setTempTable] = useState<string>("");
   
   // Checkout fields
   const [paymentMethod, setPaymentMethod] = useState<"CBE" | "CBE Birr" | "Telebirr" | "Cash">("Telebirr");
@@ -223,55 +221,7 @@ export default function CustomerMenu({ tableNumber, onSelectTable, onOrderPlaced
     return matchesCategory && matchesSearch && matchesDietary && item.available;
   });
 
-  // If table is not assigned, render Table Selector
-  if (!tableNumber) {
-    return (
-      <div className="min-h-[80vh] flex items-center justify-center px-4" id="table-selector-view">
-        <motion.div 
-          initial={{ opacity: 0, y: 15 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-white border-2 border-[#1F1F1F] p-8 rounded-3xl shadow-xl max-w-md w-full"
-        >
-          <div className="text-center mb-6">
-            <h1 className="font-serif text-3xl font-bold tracking-tight text-hadero-dark mb-2">Hadero Coffee</h1>
-            <p className="text-sm text-gray-500 font-serif italic">Welcome! Please enter your table number to view our digital menu and start ordering.</p>
-          </div>
 
-          <form onSubmit={(e) => { e.preventDefault(); if (tempTable) onSelectTable(tempTable); }} className="space-y-4">
-            <div>
-              <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-600 mb-2">Table Number</label>
-              <input
-                id="table-input"
-                type="number"
-                min="1"
-                max="50"
-                placeholder="e.g. 5"
-                value={tempTable}
-                onChange={(e) => setTempTable(e.target.value)}
-                className="w-full bg-hadero-cream border border-[#9B9B45]/35 text-hadero-dark rounded-2xl px-4 py-3 focus:outline-none focus:ring-1 focus:ring-hadero-gold text-lg text-center font-bold font-serif"
-                required
-              />
-            </div>
-
-            <button
-              id="confirm-table-btn"
-              type="submit"
-              className="w-full bg-[#1F1F1F] text-white hover:bg-[#9B9B45] transition-colors duration-300 rounded-full py-3.5 text-[10px] uppercase tracking-[0.2em] font-bold flex items-center justify-center gap-2"
-            >
-              Enter Menu <ArrowRight size={14} />
-            </button>
-          </form>
-
-          <div className="mt-8 border-t border-gray-100 pt-6 text-center">
-            <span className="text-[10px] text-gray-400 uppercase tracking-widest block mb-3 font-bold">Waiters or Admin?</span>
-            <span className="text-[10px] text-hadero-gold font-bold uppercase tracking-widest bg-hadero-cream border border-[#9B9B45]/20 px-4 py-2.5 rounded-full inline-block">
-              Access the staff portal in the header
-            </span>
-          </div>
-        </motion.div>
-      </div>
-    );
-  }
 
   return (
     <motion.div
@@ -289,11 +239,7 @@ export default function CustomerMenu({ tableNumber, onSelectTable, onOrderPlaced
             Hadero Restaurant
           </span>
           <h1 className="font-serif text-2xl sm:text-3xl md:text-4xl font-black mt-2 sm:mt-3 tracking-tight">Crafted Coffee Excellence</h1>
-          <p className="text-[11px] sm:text-xs text-gray-500 mt-1 sm:mt-1.5 max-w-md font-serif italic">Every bean roasted to perfection. Order directly from your table.</p>
-        </div>
-        <div className="bg-hadero-dark text-hadero-cream font-serif font-bold text-base sm:text-lg md:text-xl px-4 py-2.5 sm:px-6 sm:py-4 rounded-2xl shadow-sm border border-hadero-gold/20 z-10 self-stretch md:self-auto text-center flex flex-col justify-center min-w-[120px] sm:min-w-[140px]">
-          <span className="text-[8px] sm:text-[9px] uppercase tracking-[0.2em] opacity-60 block font-sans font-semibold mb-0.5">Your Location</span>
-          <span className="text-base sm:text-xl">Table {tableNumber}</span>
+          <p className="text-[11px] sm:text-xs text-gray-500 mt-1 sm:mt-1.5 max-w-md font-serif italic">Every bean roasted to perfection. Enjoy our digital menu ordering.</p>
         </div>
         {/* Subtle decorative elements */}
         <div className="absolute right-0 bottom-0 w-48 h-48 bg-hadero-gold/5 rounded-full -mr-12 -mb-12 pointer-events-none" />
@@ -571,8 +517,7 @@ export default function CustomerMenu({ tableNumber, onSelectTable, onOrderPlaced
               {/* Header */}
               <div className="p-6 bg-hadero-dark text-hadero-cream flex items-center justify-between border-b border-hadero-gold/30">
                 <div>
-                  <h2 className="font-serif text-xl font-bold italic tracking-tight">Your Table Order</h2>
-                  <p className="text-xs text-hadero-gold font-serif italic">Table {tableNumber}</p>
+                  <h2 className="font-serif text-xl font-bold italic tracking-tight">Your Digital Order</h2>
                 </div>
                 <button
                   id="close-cart-btn"
@@ -789,7 +734,7 @@ export default function CustomerMenu({ tableNumber, onSelectTable, onOrderPlaced
                       <span>Sending Order...</span>
                     ) : (
                       <>
-                        <span>Place Table Order ({getCartTotal()} ETB)</span>
+                        <span>Place Order ({getCartTotal()} ETB)</span>
                         <ArrowRight size={13} className="sm:w-3.5 sm:h-3.5" />
                       </>
                     )}

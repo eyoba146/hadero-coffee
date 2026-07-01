@@ -35,12 +35,14 @@ export default function App() {
     localStorage.setItem("hadero_dark_mode", String(isDarkMode));
   }, [isDarkMode]);
 
-  // Parse table parameter from QR code URL on boot
+  // Parse portal parameter on boot
   useEffect(() => {
+    setTableNumber("QR Scan");
+
     const params = new URLSearchParams(window.location.search);
-    const table = params.get("table");
-    if (table) {
-      setTableNumber(table);
+    const portal = params.get("portal") || params.get("staff");
+    if (portal === "true" || portal === "") {
+      setActiveView("login");
     }
 
     // Attempt to recover logged-in staff user from session/local storage
@@ -59,13 +61,6 @@ export default function App() {
       setActiveOrderId(cachedOrder);
     }
   }, []);
-
-  const handleSelectTable = (table: string) => {
-    setTableNumber(table);
-    // Sync to URL silently for beautiful simulation
-    const newUrl = `${window.location.origin}${window.location.pathname}?table=${table}`;
-    window.history.replaceState({ path: newUrl }, "", newUrl);
-  };
 
   const handleOrderPlaced = (orderId: string) => {
     setActiveOrderId(orderId);
@@ -118,13 +113,6 @@ export default function App() {
 
           {/* Action Links & Context info */}
           <div className="flex items-center gap-2 sm:gap-3">
-            {/* Table Number Badge for customer */}
-            {!staffUser && tableNumber && (
-              <span className="hidden sm:inline-flex bg-hadero-gold/10 border border-hadero-gold/30 text-hadero-gold text-xs font-semibold px-3.5 py-1.5 rounded-full">
-                Table {tableNumber}
-              </span>
-            )}
-
             {/* View order status button */}
             {!staffUser && activeOrderId && activeView !== "tracker" && (
               <button
@@ -168,16 +156,7 @@ export default function App() {
                   Sign Out
                 </button>
               </div>
-            ) : activeView !== "login" ? (
-              <button
-                id="header-staff-portal-btn"
-                onClick={() => setActiveView("login")}
-                className="text-[10px] sm:text-xs font-bold text-hadero-dark hover:text-white transition-all flex items-center gap-1 bg-white border border-hadero-dark/20 hover:bg-hadero-dark px-2.5 py-1.5 sm:px-4 sm:py-2 rounded-full cursor-pointer"
-              >
-                <Lock size={12} className="sm:w-3.5 sm:h-3.5" />
-                Staff Portal
-              </button>
-            ) : (
+            ) : activeView === "login" ? (
               <button
                 id="header-customer-menu-btn"
                 onClick={() => setActiveView("menu")}
@@ -186,7 +165,7 @@ export default function App() {
                 Menu
                 <ChevronRight size={12} className="sm:w-3.5 sm:h-3.5" />
               </button>
-            )}
+            ) : null}
 
             {/* Premium Theme Toggle */}
             <button
@@ -208,7 +187,6 @@ export default function App() {
           {activeView === "menu" && (
             <CustomerMenu
               tableNumber={tableNumber}
-              onSelectTable={handleSelectTable}
               onOrderPlaced={handleOrderPlaced}
             />
           )}
@@ -251,13 +229,10 @@ export default function App() {
             <p className="text-[11px] text-gray-400 mt-1">&copy; 2026 Hadero Coffee. All rights reserved. Addis Ababa, Ethiopia.</p>
           </div>
           <div className="flex gap-4 text-xs font-semibold">
-            {!staffUser ? (
-              <>
-                <button id="footer-menu-btn" onClick={() => setActiveView("menu")} className="hover:text-hadero-gold transition-colors">Digital Menu</button>
-                <button id="footer-staff-btn" onClick={() => setActiveView("login")} className="hover:text-hadero-gold transition-colors">Staff Login</button>
-              </>
-            ) : (
+            {staffUser ? (
               <span className="text-hadero-gold font-bold">Authorized Staff Terminal</span>
+            ) : (
+              <button id="footer-menu-btn" onClick={() => setActiveView("menu")} className="hover:text-hadero-gold transition-colors">Digital Menu</button>
             )}
           </div>
         </div>

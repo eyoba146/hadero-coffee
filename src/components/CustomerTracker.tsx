@@ -134,7 +134,7 @@ export default function CustomerTracker({ orderId, onBackToMenu }: CustomerTrack
           <div>
             <span className="text-[10px] font-bold text-hadero-gold uppercase tracking-widest block">Real-time Tracker</span>
             <h2 className="font-serif text-3xl font-bold text-hadero-dark mt-1 tracking-tight">Order {order?.id}</h2>
-            <p className="text-xs text-gray-500 font-serif italic mt-1">Table {order?.table} &bull; {order ? new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ""}</p>
+            <p className="text-xs text-gray-500 font-serif italic mt-1">Placed at {order ? new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ""}</p>
           </div>
           <div className="bg-hadero-cream border border-hadero-gold/20 px-3 py-1.5 rounded-full flex items-center gap-2">
             <span className="relative flex h-2 w-2">
@@ -272,7 +272,7 @@ export default function CustomerTracker({ orderId, onBackToMenu }: CustomerTrack
       <div className="mt-8 text-center bg-white border border-hadero-gold/15 rounded-2xl p-4">
         <p className="text-xs text-gray-500 font-serif italic leading-relaxed">
           Please keep this page open to watch progress. Your barista is working on your order.
-          Need assistance? Inform your table waiter directly.
+          Need assistance? Inform a waiter directly.
         </p>
       </div>
     </motion.div>
