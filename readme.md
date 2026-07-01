@@ -1,12 +1,7 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
-</div>
 
-# Run and deploy your AI Studio app
+# Hadero Gourment Coffee
 
 This contains everything you need to run your app locally.
-
-View your app in AI Studio: https://ai.studio/apps/e236cd97-93a9-468b-8674-deb20f80fcb3
 
 ## Run Locally
 
