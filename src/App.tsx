@@ -18,6 +18,7 @@ interface StaffUser {
 
 export default function App() {
   const [activeView, setActiveView] = useState<ViewState>("menu");
+  const [logoError, setLogoError] = useState<boolean>(false);
   const [tableNumber, setTableNumber] = useState<string | null>(null);
   const [activeOrderId, setActiveOrderId] = useState<string | null>(null);
   const [staffUser, setStaffUser] = useState<StaffUser | null>(null);
@@ -98,16 +99,28 @@ export default function App() {
             }} 
             className="flex items-center gap-1.5 sm:gap-2.5 group cursor-pointer"
           >
-            <div className="bg-hadero-dark text-hadero-gold p-1.5 sm:p-2 rounded-full group-hover:scale-105 transition-transform flex items-center justify-center">
-              <Coffee className="w-4 h-4 sm:w-[18px] sm:h-[18px]" strokeWidth={2.5} />
-            </div>
-            <div className="text-left">
-              <span className="font-serif text-sm sm:text-base md:text-xl font-bold tracking-tight block leading-none">
-                HADERO
-              </span>
-              <span className="text-[7px] sm:text-[9px] uppercase tracking-[0.2em] text-hadero-gold font-bold block mt-0.5 sm:mt-1">
-                Coffee Excellence
-              </span>
+            <div className="flex items-center gap-1.5 sm:gap-2.5">
+              {!logoError ? (
+                <img 
+                  src="/logo.png" 
+                  alt="Hadero Coffee Logo" 
+                  onError={() => setLogoError(true)}
+                  className="h-10 sm:h-12 w-auto object-contain transition-all duration-300 group-hover:scale-105"
+                  referrerPolicy="no-referrer"
+                />
+              ) : (
+                <div className="bg-hadero-dark text-hadero-gold p-1.5 sm:p-2 rounded-full group-hover:scale-105 transition-transform flex items-center justify-center">
+                  <Coffee className="w-4 h-4 sm:w-[18px] sm:h-[18px]" strokeWidth={2.5} />
+                </div>
+              )}
+              <div className="text-left">
+                <span className="font-serif text-sm sm:text-base md:text-xl font-bold tracking-tight block leading-none">
+                  HADERO
+                </span>
+                <span className="text-[7px] sm:text-[9px] uppercase tracking-[0.2em] text-hadero-gold font-bold block mt-0.5 sm:mt-1">
+                  Coffee Excellence
+                </span>
+              </div>
             </div>
           </button>
 
