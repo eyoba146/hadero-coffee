@@ -24,19 +24,39 @@ function loadDb() {
     if (fs.existsSync(DB_PATH)) {
       const raw = fs.readFileSync(DB_PATH, "utf-8");
       const data = JSON.parse(raw);
-      if (!data.staff) {
+      
+      let modified = false;
+      
+      if (!data.staff || !Array.isArray(data.staff)) {
         data.staff = [];
+        modified = true;
       }
-      if (!data.settings) {
+      if (!data.orders || !Array.isArray(data.orders)) {
+        data.orders = [];
+        modified = true;
+      }
+      if (!data.menu || !Array.isArray(data.menu)) {
+        data.menu = [];
+        modified = true;
+      }
+      if (!data.images || !Array.isArray(data.images)) {
+        data.images = [];
+        modified = true;
+      }
+      if (!data.paymentAccounts || typeof data.paymentAccounts !== "object") {
+        data.paymentAccounts = {};
+        modified = true;
+      }
+      if (!data.settings || typeof data.settings !== "object") {
         data.settings = { qrTargetUrl: "" };
+        modified = true;
       }
       
       const adminExists = data.staff.some((s: any) => s.username === "admin");
       const waiterExists = data.staff.some((s: any) => s.username === "waiter");
       
-      let modified = false;
       if (!data.settings.qrTargetUrl) {
-        data.settings = { qrTargetUrl: "" };
+        data.settings.qrTargetUrl = "";
         modified = true;
       }
       if (!adminExists) {
@@ -69,7 +89,7 @@ function loadDb() {
           modified = true;
         }
       });
-
+      
       if (modified) {
         fs.writeFileSync(DB_PATH, JSON.stringify(data, null, 2), "utf-8");
       }
@@ -468,8 +488,9 @@ async function startServer() {
   // 10. Orders: Get active orders
   app.get("/api/orders", (req, res) => {
     const db = loadDb();
+    const ordersList = Array.isArray(db.orders) ? db.orders : [];
     // Sort orders by most recent
-    const sorted = [...db.orders].sort(
+    const sorted = [...ordersList].sort(
       (a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
     return res.json(sorted);
