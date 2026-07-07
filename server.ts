@@ -24,9 +24,9 @@ function loadDb() {
     if (fs.existsSync(DB_PATH)) {
       const raw = fs.readFileSync(DB_PATH, "utf-8");
       const data = JSON.parse(raw);
-      
+
       let modified = false;
-      
+
       if (!data.staff || !Array.isArray(data.staff)) {
         data.staff = [];
         modified = true;
@@ -51,10 +51,10 @@ function loadDb() {
         data.settings = { qrTargetUrl: "" };
         modified = true;
       }
-      
+
       const adminExists = data.staff.some((s: any) => s.username === "admin");
       const waiterExists = data.staff.some((s: any) => s.username === "waiter");
-      
+
       if (!data.settings.qrTargetUrl) {
         data.settings.qrTargetUrl = "";
         modified = true;
@@ -66,7 +66,7 @@ function loadDb() {
           password: "adminpassword",
           role: "admin",
           fullName: "Restaurant Admin",
-          status: "active"
+          status: "active",
         });
         modified = true;
       }
@@ -77,11 +77,11 @@ function loadDb() {
           password: "waiterpassword",
           role: "waiter",
           fullName: "Staff Waiter",
-          status: "active"
+          status: "active",
         });
         modified = true;
       }
-      
+
       // Ensure all staff have a status
       data.staff.forEach((s: any) => {
         if (!s.status) {
@@ -89,7 +89,7 @@ function loadDb() {
           modified = true;
         }
       });
-      
+
       if (modified) {
         fs.writeFileSync(DB_PATH, JSON.stringify(data, null, 2), "utf-8");
       }
@@ -108,7 +108,7 @@ function loadDb() {
         password: "adminpassword",
         role: "admin",
         fullName: "Restaurant Admin",
-        status: "active"
+        status: "active",
       },
       {
         id: "staff-2",
@@ -116,12 +116,12 @@ function loadDb() {
         password: "waiterpassword",
         role: "waiter",
         fullName: "Staff Waiter",
-        status: "active"
-      }
+        status: "active",
+      },
     ],
     paymentAccounts: {},
     images: [],
-    settings: { qrTargetUrl: "" }
+    settings: { qrTargetUrl: "" },
   };
 }
 
@@ -159,7 +159,12 @@ async function startServer() {
   // If an upload or placeholder file is requested but doesn't exist on disk,
   // we return a beautiful custom SVG matching the Hadero Coffee aesthetic!
   app.get("/uploads/:filename", (req, res, next) => {
-    const filePath = path.join(process.cwd(), "public", "uploads", req.params.filename);
+    const filePath = path.join(
+      process.cwd(),
+      "public",
+      "uploads",
+      req.params.filename,
+    );
     if (fs.existsSync(filePath)) {
       return res.sendFile(filePath);
     }
@@ -170,7 +175,7 @@ async function startServer() {
       .replace("menu-", "")
       .replace(/\.[^/.]+$/, "") // strip extension
       .replace(/[-_]/g, " ");
-    
+
     const title = nameStr
       .split(" ")
       .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
@@ -233,19 +238,22 @@ async function startServer() {
   app.post("/api/auth/login", (req, res) => {
     const { username, password, isQuickLogin } = req.body;
     const db = loadDb();
-    
+
     let staffMember;
     if (isQuickLogin && username === "waiter") {
       staffMember = db.staff.find((s: any) => s.username === "waiter");
     } else {
       staffMember = db.staff.find(
-        (s: any) => s.username === username && s.password === password
+        (s: any) => s.username === username && s.password === password,
       );
     }
 
     if (staffMember) {
       if (staffMember.status === "revoked") {
-        return res.status(403).json({ success: false, message: "Access has been revoked by the administrator." });
+        return res.status(403).json({
+          success: false,
+          message: "Access has been revoked by the administrator.",
+        });
       }
       return res.json({
         success: true,
@@ -254,12 +262,14 @@ async function startServer() {
           username: staffMember.username,
           role: staffMember.role,
           fullName: staffMember.fullName || staffMember.username,
-          status: staffMember.status || "active"
-        }
+          status: staffMember.status || "active",
+        },
       });
     }
 
-    return res.status(401).json({ success: false, message: "Invalid username or password" });
+    return res
+      .status(401)
+      .json({ success: false, message: "Invalid username or password" });
   });
 
   // 1b. Check status endpoint
@@ -280,24 +290,33 @@ async function startServer() {
 
     // Verify requesting admin exists and is admin
     const adminUser = db.staff.find(
-      (s: any) => s.username === adminUsername && s.role === "admin"
+      (s: any) => s.username === adminUsername && s.role === "admin",
     );
 
     if (!adminUser) {
-      return res.status(403).json({ success: false, message: "Unauthorized admin access." });
+      return res
+        .status(403)
+        .json({ success: false, message: "Unauthorized admin access." });
     }
 
     // Find the target user
-    const targetStaff = db.staff.find((s: any) => s.username === targetUsername);
+    const targetStaff = db.staff.find(
+      (s: any) => s.username === targetUsername,
+    );
     if (!targetStaff) {
-      return res.status(404).json({ success: false, message: "Staff user not found." });
+      return res
+        .status(404)
+        .json({ success: false, message: "Staff user not found." });
     }
 
     // Update password
     targetStaff.password = newPassword;
     saveDb(db);
 
-    return res.json({ success: true, message: `Successfully updated password for ${targetUsername}` });
+    return res.json({
+      success: true,
+      message: `Successfully updated password for ${targetUsername}`,
+    });
   });
 
   // 2b. Auth Endpoint: Self-Change Password (flow: current password -> new password)
@@ -307,17 +326,24 @@ async function startServer() {
 
     const staffMember = db.staff.find((s: any) => s.username === username);
     if (!staffMember) {
-      return res.status(404).json({ success: false, message: "Staff user not found." });
+      return res
+        .status(404)
+        .json({ success: false, message: "Staff user not found." });
     }
 
     if (staffMember.password !== currentPassword) {
-      return res.status(400).json({ success: false, message: "Current password is incorrect." });
+      return res
+        .status(400)
+        .json({ success: false, message: "Current password is incorrect." });
     }
 
     staffMember.password = newPassword;
     saveDb(db);
 
-    return res.json({ success: true, message: "Password successfully changed!" });
+    return res.json({
+      success: true,
+      message: "Password successfully changed!",
+    });
   });
 
   // 3. Menu Endpoint: Get complete menu
@@ -339,7 +365,7 @@ async function startServer() {
       price: Number(newItem.price) || 0,
       description: newItem.description || "",
       image: newItem.image || "/uploads/placeholder_macchiato.jpg",
-      available: newItem.available !== false
+      available: newItem.available !== false,
     };
 
     db.menu.push(item);
@@ -356,17 +382,22 @@ async function startServer() {
 
     const idx = db.menu.findIndex((m: any) => m.id === id);
     if (idx === -1) {
-      return res.status(404).json({ success: false, message: "Menu item not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Menu item not found" });
     }
 
     db.menu[idx] = {
       ...db.menu[idx],
       name: updatedData.name ?? db.menu[idx].name,
       category: updatedData.category ?? db.menu[idx].category,
-      price: updatedData.price !== undefined ? Number(updatedData.price) : db.menu[idx].price,
+      price:
+        updatedData.price !== undefined
+          ? Number(updatedData.price)
+          : db.menu[idx].price,
       description: updatedData.description ?? db.menu[idx].description,
       image: updatedData.image ?? db.menu[idx].image,
-      available: updatedData.available ?? db.menu[idx].available
+      available: updatedData.available ?? db.menu[idx].available,
     };
 
     saveDb(db);
@@ -382,11 +413,16 @@ async function startServer() {
     db.menu = db.menu.filter((m: any) => m.id !== id);
 
     if (db.menu.length === originalLength) {
-      return res.status(404).json({ success: false, message: "Menu item not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Menu item not found" });
     }
 
     saveDb(db);
-    return res.json({ success: true, message: "Menu item deleted successfully" });
+    return res.json({
+      success: true,
+      message: "Menu item deleted successfully",
+    });
   });
 
   // 7. Staff Management: Get staff list
@@ -398,7 +434,7 @@ async function startServer() {
       username: s.username,
       role: s.role,
       fullName: s.fullName || s.username,
-      status: s.status || "active"
+      status: s.status || "active",
     }));
     return res.json(sanitizedStaff);
   });
@@ -409,7 +445,9 @@ async function startServer() {
     const db = loadDb();
 
     if (db.staff.find((s: any) => s.username === username)) {
-      return res.status(400).json({ success: false, message: "Username already exists" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Username already exists" });
     }
 
     const newStaff = {
@@ -418,7 +456,7 @@ async function startServer() {
       password: password || "staff123",
       role: role || "waiter",
       fullName: fullName || username,
-      status: "active"
+      status: "active",
     };
 
     db.staff.push(newStaff);
@@ -431,8 +469,8 @@ async function startServer() {
         username: newStaff.username,
         role: newStaff.role,
         fullName: newStaff.fullName,
-        status: newStaff.status
-      }
+        status: newStaff.status,
+      },
     });
   });
 
@@ -443,20 +481,26 @@ async function startServer() {
 
     const staffMember = db.staff.find((s: any) => s.id === id);
     if (!staffMember) {
-      return res.status(404).json({ success: false, message: "Staff account not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Staff account not found" });
     }
 
     if (staffMember.username === "admin") {
-      return res.status(400).json({ success: false, message: "Cannot revoke or disable the master administrator account!" });
+      return res.status(400).json({
+        success: false,
+        message: "Cannot revoke or disable the master administrator account!",
+      });
     }
 
-    staffMember.status = staffMember.status === "revoked" ? "active" : "revoked";
+    staffMember.status =
+      staffMember.status === "revoked" ? "active" : "revoked";
     saveDb(db);
 
-    return res.json({ 
-      success: true, 
-      message: `Staff account status for "${staffMember.username}" changed to ${staffMember.status}`, 
-      status: staffMember.status 
+    return res.json({
+      success: true,
+      message: `Staff account status for "${staffMember.username}" changed to ${staffMember.status}`,
+      status: staffMember.status,
     });
   });
 
@@ -467,22 +511,33 @@ async function startServer() {
 
     const staffMember = db.staff.find((s: any) => s.id === id);
     if (!staffMember) {
-      return res.status(404).json({ success: false, message: "Staff account not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Staff account not found" });
     }
 
     if (staffMember.username === "waiter" || staffMember.username === "admin") {
-      return res.status(400).json({ success: false, message: "Cannot delete master accounts. Please use 'Revoke Access' instead to suspend access." });
+      return res.status(400).json({
+        success: false,
+        message:
+          "Cannot delete master accounts. Please use 'Revoke Access' instead to suspend access.",
+      });
     }
 
     const originalLength = db.staff.length;
     db.staff = db.staff.filter((s: any) => s.id !== id);
 
     if (db.staff.length === originalLength) {
-      return res.status(404).json({ success: false, message: "Staff account not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Staff account not found" });
     }
 
     saveDb(db);
-    return res.json({ success: true, message: "Staff account deleted successfully" });
+    return res.json({
+      success: true,
+      message: "Staff account deleted successfully",
+    });
   });
 
   // 10. Orders: Get active orders
@@ -491,7 +546,8 @@ async function startServer() {
     const ordersList = Array.isArray(db.orders) ? db.orders : [];
     // Sort orders by most recent
     const sorted = [...ordersList].sort(
-      (a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      (a: any, b: any) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
     );
     return res.json(sorted);
   });
@@ -502,12 +558,15 @@ async function startServer() {
     const db = loadDb();
 
     if (!table || !items || !Array.isArray(items) || items.length === 0) {
-      return res.status(400).json({ success: false, message: "Table number and ordered items are required." });
+      return res.status(400).json({
+        success: false,
+        message: "Table number and ordered items are required.",
+      });
     }
 
     // Generate a beautiful visual invoice code: HD- followed by random 3 digits (e.g. HD-294)
     const orderNum = "HD-" + Math.floor(100 + Math.random() * 900);
-    
+
     // Check for item matches from menu database to get correct names/prices and calculate total
     let computedTotal = 0;
     const orderItems = items.map((cartItem: any) => {
@@ -520,7 +579,7 @@ async function startServer() {
         id: cartItem.id,
         name,
         price,
-        quantity: qty
+        quantity: qty,
       };
     });
 
@@ -532,7 +591,7 @@ async function startServer() {
       paymentMethod: paymentMethod || "Cash",
       status: "Pending", // initial state
       createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
     };
 
     db.orders.push(newOrder);
@@ -546,9 +605,13 @@ async function startServer() {
     const { id } = req.params;
     const db = loadDb();
 
-    const order = db.orders.find((o: any) => o.id.toLowerCase() === id.toLowerCase());
+    const order = db.orders.find(
+      (o: any) => o.id.toLowerCase() === id.toLowerCase(),
+    );
     if (!order) {
-      return res.status(404).json({ success: false, message: "Order not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Order not found" });
     }
 
     return res.json(order);
@@ -560,14 +623,20 @@ async function startServer() {
     const { status } = req.body; // 'Pending' | 'Cooking' | 'Served' | 'Completed'
     const db = loadDb();
 
-    const order = db.orders.find((o: any) => o.id.toLowerCase() === id.toLowerCase());
+    const order = db.orders.find(
+      (o: any) => o.id.toLowerCase() === id.toLowerCase(),
+    );
     if (!order) {
-      return res.status(404).json({ success: false, message: "Order not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Order not found" });
     }
 
     const allowedStatuses = ["Pending", "Cooking", "Served", "Completed"];
     if (!allowedStatuses.includes(status)) {
-      return res.status(400).json({ success: false, message: "Invalid status state" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid status state" });
     }
 
     order.status = status;
@@ -580,7 +649,9 @@ async function startServer() {
   // 14. Upload: Handle file upload via local file input
   app.post("/api/upload", upload.single("image"), (req, res) => {
     if (!req.file) {
-      return res.status(400).json({ success: false, message: "No file uploaded" });
+      return res
+        .status(400)
+        .json({ success: false, message: "No file uploaded" });
     }
 
     const fileUrl = `/uploads/${req.file.filename}`;
@@ -598,7 +669,9 @@ async function startServer() {
   app.post("/api/upload-base64", (req, res) => {
     const { base64Image } = req.body;
     if (!base64Image) {
-      return res.status(400).json({ success: false, message: "No image data provided" });
+      return res
+        .status(400)
+        .json({ success: false, message: "No image data provided" });
     }
 
     try {
@@ -630,7 +703,9 @@ async function startServer() {
       return res.json({ success: true, imageUrl: fileUrl });
     } catch (error: any) {
       console.error("Failed to save base64 image:", error);
-      return res.status(500).json({ success: false, message: "Failed to save captured image" });
+      return res
+        .status(500)
+        .json({ success: false, message: "Failed to save captured image" });
     }
   });
 
@@ -673,15 +748,20 @@ async function startServer() {
         errorCorrectionLevel: "H",
         color: {
           dark: "#1F1F1F",
-          light: "#FFFFFF"
-        }
+          light: "#FFFFFF",
+        },
       });
       res.setHeader("Content-Type", "image/png");
-      res.setHeader("Content-Disposition", "attachment; filename=hadero_coffee_menu_qr.png");
+      res.setHeader(
+        "Content-Disposition",
+        "attachment; filename=hadero_coffee_menu_qr.png",
+      );
       return res.send(buffer);
     } catch (err) {
       console.error("Error generating QR on server:", err);
-      return res.status(500).json({ success: false, message: "Failed to generate QR image." });
+      return res
+        .status(500)
+        .json({ success: false, message: "Failed to generate QR image." });
     }
   });
 
@@ -695,13 +775,15 @@ async function startServer() {
       const buffer = await QRCode.toBuffer(targetUrl, {
         width: 300,
         margin: 2,
-        errorCorrectionLevel: "Q"
+        errorCorrectionLevel: "Q",
       });
       res.setHeader("Content-Type", "image/png");
       return res.send(buffer);
     } catch (err) {
       console.error("Error rendering QR image:", err);
-      return res.status(500).json({ success: false, message: "Error rendering QR code." });
+      return res
+        .status(500)
+        .json({ success: false, message: "Error rendering QR code." });
     }
   });
 
@@ -709,7 +791,10 @@ async function startServer() {
   app.post("/api/settings", (req, res) => {
     const { qrTargetUrl } = req.body;
     if (!qrTargetUrl || typeof qrTargetUrl !== "string") {
-      return res.status(400).json({ success: false, message: "A valid QR Target URL string is required." });
+      return res.status(400).json({
+        success: false,
+        message: "A valid QR Target URL string is required.",
+      });
     }
 
     let trimmedUrl = qrTargetUrl.trim();
@@ -720,21 +805,27 @@ async function startServer() {
     let cleanedUrl = trimmedUrl;
     try {
       const urlObj = new URL(trimmedUrl);
-      
+
       // Remove query parameters like staff, portal, login, admin, waiter
       const paramsToRemove = ["staff", "portal", "login", "admin", "waiter"];
       paramsToRemove.forEach((param) => {
         urlObj.searchParams.delete(param);
       });
-      
+
       // Clean pathname: split by "/" and filter out staff-related path segments
       const segments = urlObj.pathname.split("/");
       const cleanSegments = segments.filter((seg) => {
         const lower = seg.toLowerCase();
-        return lower !== "staff" && lower !== "portal" && lower !== "login" && lower !== "admin" && lower !== "waiter";
+        return (
+          lower !== "staff" &&
+          lower !== "portal" &&
+          lower !== "login" &&
+          lower !== "admin" &&
+          lower !== "waiter"
+        );
       });
       urlObj.pathname = cleanSegments.join("/") || "/";
-      
+
       cleanedUrl = urlObj.toString();
     } catch (e) {
       // Basic fallback cleaning if URL parsing fails
@@ -746,14 +837,14 @@ async function startServer() {
     const db = loadDb();
     db.settings = {
       ...db.settings,
-      qrTargetUrl: cleanedUrl
+      qrTargetUrl: cleanedUrl,
     };
     saveDb(db);
 
-    return res.json({ 
-      success: true, 
-      message: "QR target URL cleaned and updated successfully!", 
-      qrTargetUrl: cleanedUrl 
+    return res.json({
+      success: true,
+      message: "QR target URL cleaned and updated successfully!",
+      qrTargetUrl: cleanedUrl,
     });
   });
 

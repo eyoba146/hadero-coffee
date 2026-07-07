@@ -1,6 +1,26 @@
 import React, { useState, useEffect } from "react";
 import { MenuItem, CartItem, PaymentAccounts } from "../types";
-import { ShoppingBag, Search, Plus, Minus, Copy, Check, Info, Phone, CreditCard, ArrowRight, Star, MapPin, Sparkles, Leaf, Flame, Instagram, Facebook, Twitter, Send } from "lucide-react";
+import {
+  ShoppingBag,
+  Search,
+  Plus,
+  Minus,
+  Copy,
+  Check,
+  Info,
+  Phone,
+  CreditCard,
+  ArrowRight,
+  Star,
+  MapPin,
+  Sparkles,
+  Leaf,
+  Flame,
+  Instagram,
+  Facebook,
+  Twitter,
+  Send,
+} from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 
 interface CustomerMenuProps {
@@ -8,17 +28,27 @@ interface CustomerMenuProps {
   onOrderPlaced: (orderId: string) => void;
 }
 
-export default function CustomerMenu({ tableNumber, onOrderPlaced }: CustomerMenuProps) {
+export default function CustomerMenu({
+  tableNumber,
+  onOrderPlaced,
+}: CustomerMenuProps) {
   const [menu, setMenu] = useState<MenuItem[]>([]);
-  const [categories, setCategories] = useState<string[]>(["All", "Drinks", "Foods"]);
+  const [categories, setCategories] = useState<string[]>([
+    "All",
+    "Drinks",
+    "Foods",
+  ]);
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState<boolean>(false);
-  
+
   // Checkout fields
-  const [paymentMethod, setPaymentMethod] = useState<"CBE" | "CBE Birr" | "Telebirr" | "Cash">("Telebirr");
-  const [paymentAccounts, setPaymentAccounts] = useState<PaymentAccounts | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<
+    "CBE" | "CBE Birr" | "Telebirr" | "Cash"
+  >("Telebirr");
+  const [paymentAccounts, setPaymentAccounts] =
+    useState<PaymentAccounts | null>(null);
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [isOrdering, setIsOrdering] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -26,10 +56,13 @@ export default function CustomerMenu({ tableNumber, onOrderPlaced }: CustomerMen
   // Luxury menu enhancements
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
   const [detailQuantity, setDetailQuantity] = useState<number>(1);
-  const [dietaryFilter, setDietaryFilter] = useState<"All" | "Signature" | "Vegetarian" | "Spicy">("All");
+  const [dietaryFilter, setDietaryFilter] = useState<
+    "All" | "Signature" | "Vegetarian" | "Spicy"
+  >("All");
 
   const getItemDetails = (item: MenuItem) => {
-    const isCoffee = item.category === "Drinks" && !item.name.toLowerCase().includes("tea");
+    const isCoffee =
+      item.category === "Drinks" && !item.name.toLowerCase().includes("tea");
     let origin = isCoffee ? "Ethiopian Highlands" : "Fresh Bakery";
     let roast = "";
     let flavorNotes = "";
@@ -79,7 +112,8 @@ export default function CustomerMenu({ tableNumber, onOrderPlaced }: CustomerMen
       isSpicy = true;
     } else if (lowerName.includes("sandwich")) {
       origin = "House Kitchen";
-      flavorNotes = "Juicy roasted chicken, fresh butter avocado, mustard aioli";
+      flavorNotes =
+        "Juicy roasted chicken, fresh butter avocado, mustard aioli";
       badges = ["Chef Special"];
     } else {
       if (item.category === "Drinks") {
@@ -95,16 +129,36 @@ export default function CustomerMenu({ tableNumber, onOrderPlaced }: CustomerMen
       }
     }
 
-    return { origin, roast, flavorNotes, caffeine, badges, isVegetarian, isSpicy, isSignature };
+    return {
+      origin,
+      roast,
+      flavorNotes,
+      caffeine,
+      badges,
+      isVegetarian,
+      isSpicy,
+      isSignature,
+    };
   };
 
   const handleAddToCartWithQuantity = (item: MenuItem, qty: number) => {
     setCart((prev) => {
       const existing = prev.find((i) => i.id === item.id);
       if (existing) {
-        return prev.map((i) => (i.id === item.id ? { ...i, quantity: i.quantity + qty } : i));
+        return prev.map((i) =>
+          i.id === item.id ? { ...i, quantity: i.quantity + qty } : i,
+        );
       }
-      return [...prev, { id: item.id, name: item.name, price: item.price, quantity: qty, category: item.category }];
+      return [
+        ...prev,
+        {
+          id: item.id,
+          name: item.name,
+          price: item.price,
+          quantity: qty,
+          category: item.category,
+        },
+      ];
     });
   };
 
@@ -114,7 +168,9 @@ export default function CustomerMenu({ tableNumber, onOrderPlaced }: CustomerMen
       .then((res) => res.json())
       .then((data) => {
         setMenu(data);
-        const uniqCats = Array.from(new Set(data.map((item: MenuItem) => item.category))) as string[];
+        const uniqCats = Array.from(
+          new Set(data.map((item: MenuItem) => item.category)),
+        ) as string[];
         const sortedCats = uniqCats.filter(Boolean).sort();
         setCategories(["All", ...sortedCats]);
       })
@@ -130,9 +186,20 @@ export default function CustomerMenu({ tableNumber, onOrderPlaced }: CustomerMen
     setCart((prev) => {
       const existing = prev.find((i) => i.id === item.id);
       if (existing) {
-        return prev.map((i) => (i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i));
+        return prev.map((i) =>
+          i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i,
+        );
       }
-      return [...prev, { id: item.id, name: item.name, price: item.price, quantity: 1, category: item.category }];
+      return [
+        ...prev,
+        {
+          id: item.id,
+          name: item.name,
+          price: item.price,
+          quantity: 1,
+          category: item.category,
+        },
+      ];
     });
   };
 
@@ -140,7 +207,9 @@ export default function CustomerMenu({ tableNumber, onOrderPlaced }: CustomerMen
     setCart((prev) => {
       const existing = prev.find((i) => i.id === itemId);
       if (existing && existing.quantity > 1) {
-        return prev.map((i) => (i.id === itemId ? { ...i, quantity: i.quantity - 1 } : i));
+        return prev.map((i) =>
+          i.id === itemId ? { ...i, quantity: i.quantity - 1 } : i,
+        );
       }
       return prev.filter((i) => i.id !== itemId);
     });
@@ -204,10 +273,12 @@ export default function CustomerMenu({ tableNumber, onOrderPlaced }: CustomerMen
   };
 
   const filteredMenu = menu.filter((item) => {
-    const matchesCategory = selectedCategory === "All" || item.category === selectedCategory;
-    const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          item.description.toLowerCase().includes(searchQuery.toLowerCase());
-    
+    const matchesCategory =
+      selectedCategory === "All" || item.category === selectedCategory;
+    const matchesSearch =
+      item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.description.toLowerCase().includes(searchQuery.toLowerCase());
+
     const details = getItemDetails(item);
     let matchesDietary = true;
     if (dietaryFilter === "Signature") {
@@ -220,8 +291,6 @@ export default function CustomerMenu({ tableNumber, onOrderPlaced }: CustomerMen
 
     return matchesCategory && matchesSearch && matchesDietary && item.available;
   });
-
-
 
   return (
     <motion.div
@@ -236,10 +305,14 @@ export default function CustomerMenu({ tableNumber, onOrderPlaced }: CustomerMen
       <div className="mb-6 sm:mb-8 bg-white border border-hadero-gold/20 text-hadero-dark p-5 sm:p-6 md:p-8 rounded-3xl relative overflow-hidden flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div className="relative z-10">
           <span className="text-[9px] sm:text-[10px] font-extrabold uppercase tracking-[0.2em] text-hadero-gold bg-hadero-gold/10 px-2.5 py-1 rounded-full border border-hadero-gold/20">
-            Hadero Restaurant
+            Hadero Coffee
           </span>
-          <h1 className="font-serif text-2xl sm:text-3xl md:text-4xl font-black mt-2 sm:mt-3 tracking-tight">Crafted Coffee Excellence</h1>
-          <p className="text-[11px] sm:text-xs text-gray-500 mt-1 sm:mt-1.5 max-w-md font-serif italic">Every bean roasted to perfection. Enjoy our digital menu ordering.</p>
+          <h1 className="font-serif text-2xl sm:text-3xl md:text-4xl font-black mt-2 sm:mt-3 tracking-tight">
+            Crafted Coffee Excellence
+          </h1>
+          <p className="text-[11px] sm:text-xs text-gray-500 mt-1 sm:mt-1.5 max-w-md font-serif italic">
+            Every bean roasted to perfection. Enjoy our digital menu ordering.
+          </p>
         </div>
         {/* Subtle decorative elements */}
         <div className="absolute right-0 bottom-0 w-48 h-48 bg-hadero-gold/5 rounded-full -mr-12 -mb-12 pointer-events-none" />
@@ -251,7 +324,7 @@ export default function CustomerMenu({ tableNumber, onOrderPlaced }: CustomerMen
         <div className="relative flex-1 max-w-full overflow-hidden">
           {/* Left Fade Overlay */}
           <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-hadero-cream via-hadero-cream/70 to-transparent pointer-events-none z-10 md:hidden" />
-          
+
           <div className="flex gap-1.5 overflow-x-auto pb-1.5 scrollbar-none px-4 md:px-0">
             {categories.map((cat) => (
               <button
@@ -275,7 +348,10 @@ export default function CustomerMenu({ tableNumber, onOrderPlaced }: CustomerMen
 
         {/* Search */}
         <div className="relative flex-1 md:max-w-sm">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+          <Search
+            className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"
+            size={16}
+          />
           <input
             id="menu-search-input"
             type="text"
@@ -287,16 +363,22 @@ export default function CustomerMenu({ tableNumber, onOrderPlaced }: CustomerMen
         </div>
       </div>
 
-
-
       {/* Menu Item Grid */}
       {filteredMenu.length === 0 ? (
-        <div className="text-center py-16 bg-white rounded-2xl border border-[#9B9B45]/15" id="no-items-found">
+        <div
+          className="text-center py-16 bg-white rounded-2xl border border-[#9B9B45]/15"
+          id="no-items-found"
+        >
           <Search size={36} className="mx-auto text-gray-300 mb-3" />
-          <p className="text-gray-500 font-serif italic text-sm">No items found matching your filters.</p>
+          <p className="text-gray-500 font-serif italic text-sm">
+            No items found matching your filters.
+          </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8" id="menu-items-grid">
+        <div
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8"
+          id="menu-items-grid"
+        >
           {filteredMenu.map((item) => {
             const details = getItemDetails(item);
             return (
@@ -306,19 +388,23 @@ export default function CustomerMenu({ tableNumber, onOrderPlaced }: CustomerMen
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95 }}
-                whileHover={{ 
-                  y: -8, 
+                whileHover={{
+                  y: -8,
                   scale: 1.015,
-                  boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.08)"
+                  boxShadow:
+                    "0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.08)",
                 }}
                 transition={{ duration: 0.35, ease: "easeOut" }}
                 className="bg-white border border-hadero-gold/15 rounded-[2.25rem] overflow-hidden shadow-md flex flex-col h-full group relative"
                 id={`menu-item-card-${item.id}`}
               >
                 {/* Clickable Image & Info overlay */}
-                <div 
+                <div
                   className="h-48 w-full bg-hadero-dark overflow-hidden relative cursor-pointer"
-                  onClick={() => { setSelectedItem(item); setDetailQuantity(1); }}
+                  onClick={() => {
+                    setSelectedItem(item);
+                    setDetailQuantity(1);
+                  }}
                 >
                   <img
                     src={item.image}
@@ -326,7 +412,7 @@ export default function CustomerMenu({ tableNumber, onOrderPlaced }: CustomerMen
                     referrerPolicy="no-referrer"
                     className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
                   />
-                  
+
                   {/* Category Pill */}
                   <span className="absolute top-3 left-3 bg-hadero-dark/85 backdrop-blur-xs text-white text-[8px] font-extrabold uppercase tracking-widest px-3 py-1 rounded-full border border-white/10">
                     {item.category}
@@ -342,13 +428,16 @@ export default function CustomerMenu({ tableNumber, onOrderPlaced }: CustomerMen
                   {details.badges.length > 0 && (
                     <div className="absolute top-3 right-3 flex flex-col items-end gap-1.5">
                       {details.badges.map((badge, bIdx) => {
-                        const isSig = badge.toLowerCase().includes("signature") || badge.toLowerCase().includes("chef") || badge.toLowerCase().includes("staff");
+                        const isSig =
+                          badge.toLowerCase().includes("signature") ||
+                          badge.toLowerCase().includes("chef") ||
+                          badge.toLowerCase().includes("staff");
                         return (
-                          <span 
-                            key={bIdx} 
+                          <span
+                            key={bIdx}
                             className={`text-[8px] font-extrabold uppercase tracking-widest px-2.5 py-1 rounded-full shadow-xs flex items-center gap-1 border ${
-                              isSig 
-                                ? "bg-amber-500 text-white border-amber-400" 
+                              isSig
+                                ? "bg-amber-500 text-white border-amber-400"
                                 : "bg-hadero-gold text-white border-hadero-gold"
                             }`}
                           >
@@ -371,31 +460,49 @@ export default function CustomerMenu({ tableNumber, onOrderPlaced }: CustomerMen
 
                 {/* Card Body */}
                 <div className="p-5 flex flex-col flex-1 justify-between">
-                  <div 
+                  <div
                     className="cursor-pointer"
-                    onClick={() => { setSelectedItem(item); setDetailQuantity(1); }}
+                    onClick={() => {
+                      setSelectedItem(item);
+                      setDetailQuantity(1);
+                    }}
                   >
                     <div className="flex justify-between items-center mb-2 gap-2">
-                      <h3 className="font-serif text-base font-extrabold text-hadero-dark group-hover:text-hadero-gold transition-colors line-clamp-1">{item.name}</h3>
+                      <h3 className="font-serif text-base font-extrabold text-hadero-dark group-hover:text-hadero-gold transition-colors line-clamp-1">
+                        {item.name}
+                      </h3>
                       <span className="text-[9px] font-mono text-amber-600 font-bold shrink-0 bg-amber-50/80 px-2 py-0.5 rounded-full border border-amber-200/40 flex items-center gap-0.5">
-                        <Star size={9} className="text-amber-500 fill-amber-500" />
+                        <Star
+                          size={9}
+                          className="text-amber-500 fill-amber-500"
+                        />
                         <span>4.9</span>
                       </span>
                     </div>
-                    <p className="text-xs text-gray-500 line-clamp-2 mb-4 min-h-[32px] font-sans leading-relaxed">{item.description}</p>
+                    <p className="text-xs text-gray-500 line-clamp-2 mb-4 min-h-[32px] font-sans leading-relaxed">
+                      {item.description}
+                    </p>
                   </div>
 
                   <div className="flex items-center justify-between border-t border-gray-100 pt-4">
                     <div className="flex flex-col">
-                      <span className="text-[8px] font-mono font-bold text-gray-400 uppercase tracking-widest">Pricing</span>
+                      <span className="text-[8px] font-mono font-bold text-gray-400 uppercase tracking-widest">
+                        Pricing
+                      </span>
                       <span className="font-bold text-base text-hadero-dark font-serif">
-                        {item.price} <span className="text-[9px] font-sans font-semibold text-gray-500 uppercase tracking-wider">ETB</span>
+                        {item.price}{" "}
+                        <span className="text-[9px] font-sans font-semibold text-gray-500 uppercase tracking-wider">
+                          ETB
+                        </span>
                       </span>
                     </div>
 
                     <div className="flex items-center gap-2">
                       <button
-                        onClick={() => { setSelectedItem(item); setDetailQuantity(1); }}
+                        onClick={() => {
+                          setSelectedItem(item);
+                          setDetailQuantity(1);
+                        }}
                         className="bg-hadero-cream text-hadero-gold hover:bg-hadero-gold hover:text-white transition-all p-2.5 rounded-full flex items-center justify-center cursor-pointer border border-hadero-gold/10"
                         title="View recipe details"
                       >
@@ -419,10 +526,17 @@ export default function CustomerMenu({ tableNumber, onOrderPlaced }: CustomerMen
       )}
 
       {/* Social Media & Footer Section */}
-      <div className="mt-16 border-t border-hadero-gold/15 pt-10 pb-8 text-center" id="customer-footer">
-        <p className="font-serif text-sm font-bold text-hadero-dark tracking-wide uppercase">Connect with Hadero</p>
-        <p className="text-[11px] text-gray-500 font-serif italic mt-1 mb-6">Stay updated on our premium roasts, events, and masterclasses</p>
-        
+      <div
+        className="mt-16 border-t border-hadero-gold/15 pt-10 pb-8 text-center"
+        id="customer-footer"
+      >
+        <p className="font-serif text-sm font-bold text-hadero-dark tracking-wide uppercase">
+          Connect with Hadero
+        </p>
+        <p className="text-[11px] text-gray-500 font-serif italic mt-1 mb-6">
+          Stay updated on our premium roasts, events, and masterclasses
+        </p>
+
         <div className="flex items-center justify-center gap-4.5 mb-8">
           <a
             href="https://instagram.com"
@@ -463,7 +577,8 @@ export default function CustomerMenu({ tableNumber, onOrderPlaced }: CustomerMen
         </div>
 
         <p className="text-[10px] uppercase tracking-widest text-gray-400 font-bold">
-          © {new Date().getFullYear()} HADERO COFFEE ROASTERS. ALL RIGHTS RESERVED.
+          © {new Date().getFullYear()} HADERO COFFEE ROASTERS. ALL RIGHTS
+          RESERVED.
         </p>
       </div>
 
@@ -495,7 +610,10 @@ export default function CustomerMenu({ tableNumber, onOrderPlaced }: CustomerMen
       {/* Cart Drawer / Modal Checkout */}
       <AnimatePresence>
         {isCartOpen && (
-          <div className="fixed inset-0 z-50 overflow-hidden flex justify-end" id="cart-drawer-backdrop">
+          <div
+            className="fixed inset-0 z-50 overflow-hidden flex justify-end"
+            id="cart-drawer-backdrop"
+          >
             {/* Backdrop cover */}
             <motion.div
               initial={{ opacity: 0 }}
@@ -517,7 +635,9 @@ export default function CustomerMenu({ tableNumber, onOrderPlaced }: CustomerMen
               {/* Header */}
               <div className="p-6 bg-hadero-dark text-hadero-cream flex items-center justify-between border-b border-hadero-gold/30">
                 <div>
-                  <h2 className="font-serif text-xl font-bold italic tracking-tight">Your Digital Order</h2>
+                  <h2 className="font-serif text-xl font-bold italic tracking-tight">
+                    Your Digital Order
+                  </h2>
                 </div>
                 <button
                   id="close-cart-btn"
@@ -533,7 +653,9 @@ export default function CustomerMenu({ tableNumber, onOrderPlaced }: CustomerMen
                 {cart.length === 0 ? (
                   <div className="h-full flex flex-col items-center justify-center text-center py-12">
                     <ShoppingBag size={48} className="text-gray-300 mb-3" />
-                    <p className="text-gray-500 font-serif italic">Your cart is currently empty.</p>
+                    <p className="text-gray-500 font-serif italic">
+                      Your cart is currently empty.
+                    </p>
                     <button
                       id="back-to-menu-btn"
                       onClick={() => setIsCartOpen(false)}
@@ -545,7 +667,9 @@ export default function CustomerMenu({ tableNumber, onOrderPlaced }: CustomerMen
                 ) : (
                   <>
                     <div className="flex justify-between items-center pb-2 border-b border-gray-200">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Selected Items</span>
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500">
+                        Selected Items
+                      </span>
                       <button
                         id="clear-cart-btn"
                         onClick={handleClearCart}
@@ -562,8 +686,12 @@ export default function CustomerMenu({ tableNumber, onOrderPlaced }: CustomerMen
                         id={`cart-item-${item.id}`}
                       >
                         <div>
-                          <h4 className="font-serif font-bold text-hadero-dark text-xs sm:text-sm">{item.name}</h4>
-                          <span className="text-[10px] sm:text-xs text-gray-500 font-medium">{item.price} ETB each</span>
+                          <h4 className="font-serif font-bold text-hadero-dark text-xs sm:text-sm">
+                            {item.name}
+                          </h4>
+                          <span className="text-[10px] sm:text-xs text-gray-500 font-medium">
+                            {item.price} ETB each
+                          </span>
                         </div>
 
                         <div className="flex items-center gap-2.5 sm:gap-3">
@@ -574,10 +702,18 @@ export default function CustomerMenu({ tableNumber, onOrderPlaced }: CustomerMen
                           >
                             <Minus size={11} />
                           </button>
-                          <span className="font-bold text-xs sm:text-sm w-4 text-center font-serif">{item.quantity}</span>
+                          <span className="font-bold text-xs sm:text-sm w-4 text-center font-serif">
+                            {item.quantity}
+                          </span>
                           <button
                             id={`qty-plus-${item.id}`}
-                            onClick={() => handleAddToCart({ id: item.id, name: item.name, price: item.price } as MenuItem)}
+                            onClick={() =>
+                              handleAddToCart({
+                                id: item.id,
+                                name: item.name,
+                                price: item.price,
+                              } as MenuItem)
+                            }
                             className="bg-hadero-cream border border-gray-200 hover:border-hadero-gold hover:bg-white text-hadero-dark p-1.5 sm:p-2 rounded-full transition-all cursor-pointer flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8"
                           >
                             <Plus size={11} />
@@ -597,7 +733,9 @@ export default function CustomerMenu({ tableNumber, onOrderPlaced }: CustomerMen
                           Payment Option (Copy Account &amp; Pay)
                         </label>
                         <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
-                          {(["Telebirr", "CBE Birr", "CBE", "Cash"] as const).map((method) => (
+                          {(
+                            ["Telebirr", "CBE Birr", "CBE", "Cash"] as const
+                          ).map((method) => (
                             <button
                               id={`pay-method-${method.replace(" ", "-")}`}
                               key={method}
@@ -620,11 +758,18 @@ export default function CustomerMenu({ tableNumber, onOrderPlaced }: CustomerMen
                         <div className="bg-hadero-cream border border-hadero-gold/25 rounded-2xl p-3 sm:p-4 text-xs relative overflow-hidden">
                           <div className="flex justify-between items-start mb-1.5">
                             <span className="font-bold uppercase text-[9px] sm:text-[10px] text-hadero-dark flex items-center gap-1.5 tracking-wider">
-                              <CreditCard size={12} className="text-hadero-gold" />
-                              {paymentMethod === "Telebirr" && paymentAccounts.telebirr.name}
-                              {paymentMethod === "CBE Birr" && paymentAccounts.cbeBirr.name}
-                              {paymentMethod === "CBE" && paymentAccounts.cbe.name}
-                              {paymentMethod === "Cash" && paymentAccounts.cash.name}
+                              <CreditCard
+                                size={12}
+                                className="text-hadero-gold"
+                              />
+                              {paymentMethod === "Telebirr" &&
+                                paymentAccounts.telebirr.name}
+                              {paymentMethod === "CBE Birr" &&
+                                paymentAccounts.cbeBirr.name}
+                              {paymentMethod === "CBE" &&
+                                paymentAccounts.cbe.name}
+                              {paymentMethod === "Cash" &&
+                                paymentAccounts.cash.name}
                             </span>
                             {paymentMethod !== "Cash" && (
                               <span className="text-[7px] sm:text-[8px] font-bold uppercase tracking-widest text-hadero-gold bg-hadero-dark px-2 py-0.5 rounded-full">
@@ -634,7 +779,9 @@ export default function CustomerMenu({ tableNumber, onOrderPlaced }: CustomerMen
                           </div>
 
                           {paymentMethod === "Cash" ? (
-                            <p className="text-gray-600 leading-relaxed font-serif italic text-[10px] sm:text-xs">{paymentAccounts.cash.description}</p>
+                            <p className="text-gray-600 leading-relaxed font-serif italic text-[10px] sm:text-xs">
+                              {paymentAccounts.cash.description}
+                            </p>
                           ) : (
                             <div className="space-y-1.5 mt-1.5">
                               <div className="flex justify-between items-center bg-white p-2.5 sm:p-3 rounded-xl border border-hadero-gold/15">
@@ -643,54 +790,80 @@ export default function CustomerMenu({ tableNumber, onOrderPlaced }: CustomerMen
                                     {paymentMethod} Account
                                   </span>
                                   <span className="font-mono font-bold text-hadero-dark text-[11px] sm:text-xs">
-                                    {paymentMethod === "Telebirr" && paymentAccounts.telebirr.accountNumber}
-                                    {paymentMethod === "CBE Birr" && paymentAccounts.cbeBirr.accountNumber}
-                                    {paymentMethod === "CBE" && paymentAccounts.cbe.accountNumber}
+                                    {paymentMethod === "Telebirr" &&
+                                      paymentAccounts.telebirr.accountNumber}
+                                    {paymentMethod === "CBE Birr" &&
+                                      paymentAccounts.cbeBirr.accountNumber}
+                                    {paymentMethod === "CBE" &&
+                                      paymentAccounts.cbe.accountNumber}
                                   </span>
                                 </div>
                                 <button
                                   id="copy-account-btn"
                                   type="button"
                                   onClick={() => {
-                                    const acc = paymentMethod === "Telebirr" ? paymentAccounts.telebirr.accountNumber :
-                                                paymentMethod === "CBE Birr" ? paymentAccounts.cbeBirr.accountNumber :
-                                                paymentAccounts.cbe.accountNumber;
+                                    const acc =
+                                      paymentMethod === "Telebirr"
+                                        ? paymentAccounts.telebirr.accountNumber
+                                        : paymentMethod === "CBE Birr"
+                                          ? paymentAccounts.cbeBirr
+                                              .accountNumber
+                                          : paymentAccounts.cbe.accountNumber;
                                     if (acc) handleCopyText(acc, "account");
                                   }}
                                   className="text-[8px] sm:text-[9px] font-bold uppercase tracking-wider border border-hadero-gold text-hadero-gold hover:bg-hadero-gold hover:text-white transition-all px-2.5 py-1 rounded-full cursor-pointer"
                                 >
-                                  {copiedField === "account" ? "Copied" : "Copy"}
+                                  {copiedField === "account"
+                                    ? "Copied"
+                                    : "Copy"}
                                 </button>
                               </div>
 
                               {/* Merchant Code if exists */}
-                              {(paymentMethod === "Telebirr" || paymentMethod === "CBE Birr") && (
+                              {(paymentMethod === "Telebirr" ||
+                                paymentMethod === "CBE Birr") && (
                                 <div className="flex justify-between items-center bg-white p-2.5 sm:p-3 rounded-xl border border-hadero-gold/15">
                                   <div>
-                                    <span className="text-[8px] sm:text-[9px] uppercase text-gray-400 block font-bold tracking-wider">Merchant ID</span>
+                                    <span className="text-[8px] sm:text-[9px] uppercase text-gray-400 block font-bold tracking-wider">
+                                      Merchant ID
+                                    </span>
                                     <span className="font-mono font-bold text-hadero-dark text-[11px] sm:text-xs">
-                                      {paymentMethod === "Telebirr" && paymentAccounts.telebirr.merchantCode}
-                                      {paymentMethod === "CBE Birr" && paymentAccounts.cbeBirr.merchantCode}
+                                      {paymentMethod === "Telebirr" &&
+                                        paymentAccounts.telebirr.merchantCode}
+                                      {paymentMethod === "CBE Birr" &&
+                                        paymentAccounts.cbeBirr.merchantCode}
                                     </span>
                                   </div>
                                   <button
                                     id="copy-merchant-btn"
                                     type="button"
                                     onClick={() => {
-                                      const code = paymentMethod === "Telebirr" ? paymentAccounts.telebirr.merchantCode : paymentAccounts.cbeBirr.merchantCode;
-                                      if (code) handleCopyText(code, "merchant");
+                                      const code =
+                                        paymentMethod === "Telebirr"
+                                          ? paymentAccounts.telebirr
+                                              .merchantCode
+                                          : paymentAccounts.cbeBirr
+                                              .merchantCode;
+                                      if (code)
+                                        handleCopyText(code, "merchant");
                                     }}
                                     className="text-[8px] sm:text-[9px] font-bold uppercase tracking-wider border border-hadero-gold text-hadero-gold hover:bg-hadero-gold hover:text-white transition-all px-2.5 py-1 rounded-full cursor-pointer"
                                   >
-                                    {copiedField === "merchant" ? "Copied" : "Copy"}
+                                    {copiedField === "merchant"
+                                      ? "Copied"
+                                      : "Copy"}
                                   </button>
                                 </div>
                               )}
 
                               <div className="text-[8px] sm:text-[9px] text-gray-500 leading-tight flex items-start gap-1">
-                                <Info size={10} className="text-hadero-gold shrink-0 mt-0.5" />
+                                <Info
+                                  size={10}
+                                  className="text-hadero-gold shrink-0 mt-0.5"
+                                />
                                 <span>
-                                  Please copy details above, pay in your wallet, and place order. Waiter will verify.
+                                  Please copy details above, pay in your wallet,
+                                  and place order. Waiter will verify.
                                 </span>
                               </div>
                             </div>
@@ -709,16 +882,25 @@ export default function CustomerMenu({ tableNumber, onOrderPlaced }: CustomerMen
                   <div className="space-y-1">
                     <div className="flex justify-between text-[9px] sm:text-xs font-bold uppercase tracking-widest text-gray-400">
                       <span>Order Quantity</span>
-                      <span className="font-mono font-bold text-hadero-dark">{getCartCount()} items</span>
+                      <span className="font-mono font-bold text-hadero-dark">
+                        {getCartCount()} items
+                      </span>
                     </div>
                     <div className="flex justify-between text-sm sm:text-base border-t border-gray-100 pt-2.5">
-                      <span className="font-serif font-bold text-hadero-dark">Total Price</span>
-                      <span className="font-bold text-base sm:text-lg text-hadero-dark font-serif">{getCartTotal()} ETB</span>
+                      <span className="font-serif font-bold text-hadero-dark">
+                        Total Price
+                      </span>
+                      <span className="font-bold text-base sm:text-lg text-hadero-dark font-serif">
+                        {getCartTotal()} ETB
+                      </span>
                     </div>
                   </div>
 
                   {errorMsg && (
-                    <div className="bg-red-50 border border-red-200 text-red-600 text-[10px] sm:text-xs p-2.5 rounded-xl" id="order-error-message">
+                    <div
+                      className="bg-red-50 border border-red-200 text-red-600 text-[10px] sm:text-xs p-2.5 rounded-xl"
+                      id="order-error-message"
+                    >
                       {errorMsg}
                     </div>
                   )}
@@ -748,142 +930,181 @@ export default function CustomerMenu({ tableNumber, onOrderPlaced }: CustomerMen
 
       {/* Luxury Culinary Detail Modal */}
       <AnimatePresence>
-        {selectedItem && (() => {
-          const details = getItemDetails(selectedItem);
-          return (
-            <div className="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4" id="detail-modal-backdrop">
-              {/* Backdrop */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 0.6 }}
-                exit={{ opacity: 0 }}
-                onClick={() => setSelectedItem(null)}
-                className="fixed inset-0 bg-black/60 backdrop-blur-xs"
-              />
-
-              {/* Modal Container */}
-              <motion.div
-                initial={{ scale: 0.95, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.95, opacity: 0 }}
-                transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                className="bg-hadero-cream border-2 border-hadero-dark/30 rounded-3xl shadow-2xl max-w-2xl w-full relative overflow-hidden z-10 p-6 md:p-8 flex flex-col md:flex-row gap-6 md:gap-8"
-                id="item-detail-modal"
+        {selectedItem &&
+          (() => {
+            const details = getItemDetails(selectedItem);
+            return (
+              <div
+                className="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4"
+                id="detail-modal-backdrop"
               >
-                {/* Decorative gold inner line */}
-                <div className="absolute top-2 left-2 right-2 bottom-2 border border-hadero-gold/20 pointer-events-none rounded-2xl" />
+                {/* Backdrop */}
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 0.6 }}
+                  exit={{ opacity: 0 }}
+                  onClick={() => setSelectedItem(null)}
+                  className="fixed inset-0 bg-black/60 backdrop-blur-xs"
+                />
 
-                {/* Left Side: High Res Cover Image */}
-                <div className="w-full md:w-1/2 relative h-56 md:h-80 rounded-2xl overflow-hidden border border-hadero-dark/10">
-                  <img
-                    src={selectedItem.image}
-                    alt={selectedItem.name}
-                    referrerPolicy="no-referrer"
-                    className="w-full h-full object-cover"
-                  />
-                  <span className="absolute top-3 left-3 bg-hadero-dark/90 backdrop-blur-xs text-hadero-cream text-[9px] font-extrabold uppercase tracking-widest px-3 py-1 rounded-full">
-                    {selectedItem.category}
-                  </span>
-                  <span className="absolute bottom-3 left-3 bg-white/95 text-[9px] font-extrabold text-hadero-gold px-3 py-1.5 rounded-full shadow-sm border border-hadero-gold/15 flex items-center gap-1">
-                    <MapPin size={9} className="text-hadero-gold" />
-                    <span>{details.origin}</span>
-                  </span>
-                </div>
+                {/* Modal Container */}
+                <motion.div
+                  initial={{ scale: 0.95, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.95, opacity: 0 }}
+                  transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                  className="bg-hadero-cream border-2 border-hadero-dark/30 rounded-3xl shadow-2xl max-w-2xl w-full relative overflow-hidden z-10 p-6 md:p-8 flex flex-col md:flex-row gap-6 md:gap-8"
+                  id="item-detail-modal"
+                >
+                  {/* Decorative gold inner line */}
+                  <div className="absolute top-2 left-2 right-2 bottom-2 border border-hadero-gold/20 pointer-events-none rounded-2xl" />
 
-                {/* Right Side: Culinary description and customization */}
-                <div className="w-full md:w-1/2 flex flex-col justify-between relative z-10">
-                  <div>
-                    {/* Header */}
-                    <div className="flex justify-between items-start mb-2">
-                      <div>
-                        <h2 className="font-serif text-2xl font-bold text-hadero-dark tracking-tight">{selectedItem.name}</h2>
-                        <span className="text-[10px] text-hadero-gold font-serif italic mt-0.5 block">Ethiopian Artisanal Selection</span>
-                      </div>
-                      <span className="text-[10px] font-mono text-amber-600 font-bold shrink-0 bg-amber-50 border border-amber-200/50 px-2.5 py-1 rounded-full flex items-center gap-0.5 shadow-2xs">
-                        <Star size={11} className="text-amber-500 fill-amber-500" />
-                        <span>4.9</span>
-                      </span>
-                    </div>
+                  {/* Left Side: High Res Cover Image */}
+                  <div className="w-full md:w-1/2 relative h-56 md:h-80 rounded-2xl overflow-hidden border border-hadero-dark/10">
+                    <img
+                      src={selectedItem.image}
+                      alt={selectedItem.name}
+                      referrerPolicy="no-referrer"
+                      className="w-full h-full object-cover"
+                    />
+                    <span className="absolute top-3 left-3 bg-hadero-dark/90 backdrop-blur-xs text-hadero-cream text-[9px] font-extrabold uppercase tracking-widest px-3 py-1 rounded-full">
+                      {selectedItem.category}
+                    </span>
+                    <span className="absolute bottom-3 left-3 bg-white/95 text-[9px] font-extrabold text-hadero-gold px-3 py-1.5 rounded-full shadow-sm border border-hadero-gold/15 flex items-center gap-1">
+                      <MapPin size={9} className="text-hadero-gold" />
+                      <span>{details.origin}</span>
+                    </span>
+                  </div>
 
-                    {/* Tags */}
-                    {details.badges.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5 mb-4">
-                        {details.badges.map((badge, idx) => (
-                          <span key={idx} className="bg-hadero-gold/15 text-hadero-gold text-[8px] font-extrabold uppercase tracking-widest px-2.5 py-1 rounded-full border border-hadero-gold/10">
-                            {badge}
+                  {/* Right Side: Culinary description and customization */}
+                  <div className="w-full md:w-1/2 flex flex-col justify-between relative z-10">
+                    <div>
+                      {/* Header */}
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <h2 className="font-serif text-2xl font-bold text-hadero-dark tracking-tight">
+                            {selectedItem.name}
+                          </h2>
+                          <span className="text-[10px] text-hadero-gold font-serif italic mt-0.5 block">
+                            Ethiopian Artisanal Selection
                           </span>
-                        ))}
-                      </div>
-                    )}
-
-                    {/* Description */}
-                    <p className="text-xs text-gray-600 font-sans leading-relaxed mb-6">{selectedItem.description}</p>
-
-                    {/* Culinary Characteristics Grid */}
-                    <div className="grid grid-cols-2 gap-4 border-t border-b border-hadero-gold/15 py-4 mb-6">
-                      <div>
-                        <span className="text-[8px] font-mono font-bold text-gray-400 uppercase tracking-wider block">Bean Roast</span>
-                        <span className="text-xs font-serif font-bold text-hadero-dark">{details.roast || "House Fresh"}</span>
-                      </div>
-                      <div>
-                        <span className="text-[8px] font-mono font-bold text-gray-400 uppercase tracking-wider block">Caffeine Punch</span>
-                        <span className="text-xs font-serif font-bold text-hadero-dark">{details.caffeine}</span>
-                      </div>
-                      <div className="col-span-2">
-                        <span className="text-[8px] font-mono font-bold text-gray-400 uppercase tracking-wider block">Flavor Highlights</span>
-                        <span className="text-xs font-serif italic text-hadero-gold font-medium leading-relaxed">{details.flavorNotes}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Quantity and CTA row */}
-                  <div>
-                    <div className="flex items-center justify-between mb-4">
-                      <span className="text-[10px] font-sans font-bold uppercase tracking-wider text-gray-500">Select Quantity</span>
-                      <div className="flex items-center gap-4 bg-white border border-hadero-gold/20 p-1.5 rounded-full">
-                        <button
-                          onClick={() => setDetailQuantity(Math.max(1, detailQuantity - 1))}
-                          className="bg-hadero-cream hover:bg-hadero-dark hover:text-white p-2 rounded-full transition-colors cursor-pointer flex items-center justify-center w-8 h-8"
-                        >
-                          <Minus size={12} />
-                        </button>
-                        <span className="font-serif font-bold text-base text-hadero-dark w-6 text-center">{detailQuantity}</span>
-                        <button
-                          onClick={() => setDetailQuantity(detailQuantity + 1)}
-                          className="bg-hadero-cream hover:bg-hadero-dark hover:text-white p-2 rounded-full transition-colors cursor-pointer flex items-center justify-center w-8 h-8"
-                        >
-                          <Plus size={12} />
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                      <button
-                        onClick={() => setSelectedItem(null)}
-                        className="w-1/3 border border-hadero-dark text-hadero-dark hover:bg-hadero-dark hover:text-hadero-cream transition-all py-3.5 rounded-full font-bold text-[10px] uppercase tracking-wider text-center cursor-pointer"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        id="modal-add-to-cart-btn"
-                        onClick={() => {
-                          handleAddToCartWithQuantity(selectedItem, detailQuantity);
-                          setSelectedItem(null);
-                        }}
-                        className="w-2/3 bg-hadero-dark text-white hover:bg-hadero-gold hover:text-hadero-dark transition-all py-3.5 rounded-full font-bold text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 shadow-md cursor-pointer animate-none"
-                      >
-                        <span>Add To Order</span>
-                        <span className="bg-white/15 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold">
-                          {selectedItem.price * detailQuantity} ETB
+                        </div>
+                        <span className="text-[10px] font-mono text-amber-600 font-bold shrink-0 bg-amber-50 border border-amber-200/50 px-2.5 py-1 rounded-full flex items-center gap-0.5 shadow-2xs">
+                          <Star
+                            size={11}
+                            className="text-amber-500 fill-amber-500"
+                          />
+                          <span>4.9</span>
                         </span>
-                      </button>
+                      </div>
+
+                      {/* Tags */}
+                      {details.badges.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5 mb-4">
+                          {details.badges.map((badge, idx) => (
+                            <span
+                              key={idx}
+                              className="bg-hadero-gold/15 text-hadero-gold text-[8px] font-extrabold uppercase tracking-widest px-2.5 py-1 rounded-full border border-hadero-gold/10"
+                            >
+                              {badge}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Description */}
+                      <p className="text-xs text-gray-600 font-sans leading-relaxed mb-6">
+                        {selectedItem.description}
+                      </p>
+
+                      {/* Culinary Characteristics Grid */}
+                      <div className="grid grid-cols-2 gap-4 border-t border-b border-hadero-gold/15 py-4 mb-6">
+                        <div>
+                          <span className="text-[8px] font-mono font-bold text-gray-400 uppercase tracking-wider block">
+                            Bean Roast
+                          </span>
+                          <span className="text-xs font-serif font-bold text-hadero-dark">
+                            {details.roast || "House Fresh"}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-[8px] font-mono font-bold text-gray-400 uppercase tracking-wider block">
+                            Caffeine Punch
+                          </span>
+                          <span className="text-xs font-serif font-bold text-hadero-dark">
+                            {details.caffeine}
+                          </span>
+                        </div>
+                        <div className="col-span-2">
+                          <span className="text-[8px] font-mono font-bold text-gray-400 uppercase tracking-wider block">
+                            Flavor Highlights
+                          </span>
+                          <span className="text-xs font-serif italic text-hadero-gold font-medium leading-relaxed">
+                            {details.flavorNotes}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Quantity and CTA row */}
+                    <div>
+                      <div className="flex items-center justify-between mb-4">
+                        <span className="text-[10px] font-sans font-bold uppercase tracking-wider text-gray-500">
+                          Select Quantity
+                        </span>
+                        <div className="flex items-center gap-4 bg-white border border-hadero-gold/20 p-1.5 rounded-full">
+                          <button
+                            onClick={() =>
+                              setDetailQuantity(Math.max(1, detailQuantity - 1))
+                            }
+                            className="bg-hadero-cream hover:bg-hadero-dark hover:text-white p-2 rounded-full transition-colors cursor-pointer flex items-center justify-center w-8 h-8"
+                          >
+                            <Minus size={12} />
+                          </button>
+                          <span className="font-serif font-bold text-base text-hadero-dark w-6 text-center">
+                            {detailQuantity}
+                          </span>
+                          <button
+                            onClick={() =>
+                              setDetailQuantity(detailQuantity + 1)
+                            }
+                            className="bg-hadero-cream hover:bg-hadero-dark hover:text-white p-2 rounded-full transition-colors cursor-pointer flex items-center justify-center w-8 h-8"
+                          >
+                            <Plus size={12} />
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-3">
+                        <button
+                          onClick={() => setSelectedItem(null)}
+                          className="w-1/3 border border-hadero-dark text-hadero-dark hover:bg-hadero-dark hover:text-hadero-cream transition-all py-3.5 rounded-full font-bold text-[10px] uppercase tracking-wider text-center cursor-pointer"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          id="modal-add-to-cart-btn"
+                          onClick={() => {
+                            handleAddToCartWithQuantity(
+                              selectedItem,
+                              detailQuantity,
+                            );
+                            setSelectedItem(null);
+                          }}
+                          className="w-2/3 bg-hadero-dark text-white hover:bg-hadero-gold hover:text-hadero-dark transition-all py-3.5 rounded-full font-bold text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 shadow-md cursor-pointer animate-none"
+                        >
+                          <span>Add To Order</span>
+                          <span className="bg-white/15 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold">
+                            {selectedItem.price * detailQuantity} ETB
+                          </span>
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </motion.div>
-            </div>
-          );
-        })()}
+                </motion.div>
+              </div>
+            );
+          })()}
       </AnimatePresence>
     </motion.div>
   );
