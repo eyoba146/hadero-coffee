@@ -4,13 +4,72 @@ import path from "path";
 import multer from "multer";
 import { createServer as createViteServer } from "vite";
 import QRCode from "qrcode";
+import "dotenv/config";
 
-const DB_PATH = path.join(process.cwd(), "data", "db.json");
 const UPLOADS_DIR = path.join(process.cwd(), "public", "uploads");
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const STATE_TABLE_ENDPOINT = SUPABASE_URL
+  ? `${SUPABASE_URL.replace(/\/$/, "")}/rest/v1/app_state`
+  : "";
 
-// Ensure data directory and DB file exist
-if (!fs.existsSync(path.join(process.cwd(), "data"))) {
-  fs.mkdirSync(path.join(process.cwd(), "data"), { recursive: true });
+type AppState = {
+  menu: any[];
+  orders: any[];
+  staff: any[];
+  paymentAccounts: Record<string, any>;
+  images: string[];
+  settings: { qrTargetUrl: string };
+};
+
+const defaultState = (): AppState => ({
+  menu: [],
+  orders: [],
+  staff: [
+    { id: "staff-1", username: "admin", password: "adminpassword", role: "admin", fullName: "Restaurant Admin", status: "active" },
+    { id: "staff-2", username: "waiter", password: "waiterpassword", role: "waiter", fullName: "Staff Waiter", status: "active" },
+  ],
+  paymentAccounts: {},
+  images: [],
+  settings: { qrTargetUrl: "" },
+});
+
+let db: AppState = defaultState();
+
+function validateState(value: any): AppState {
+  const next = { ...defaultState(), ...(value || {}) } as AppState;
+  next.menu = Array.isArray(next.menu) ? next.menu : [];
+  next.orders = Array.isArray(next.orders) ? next.orders : [];
+  next.staff = Array.isArray(next.staff) ? next.staff : [];
+  next.images = Array.isArray(next.images) ? next.images : [];
+  next.paymentAccounts = next.paymentAccounts && typeof next.paymentAccounts === "object" ? next.paymentAccounts : {};
+  next.settings = next.settings && typeof next.settings === "object" ? next.settings : { qrTargetUrl: "" };
+  for (const account of [
+    { id: "staff-1", username: "admin", password: "adminpassword", role: "admin", fullName: "Restaurant Admin" },
+    { id: "staff-2", username: "waiter", password: "waiterpassword", role: "waiter", fullName: "Staff Waiter" },
+  ]) {
+    if (!next.staff.some((member: any) => member.username === account.username)) {
+      next.staff.push({ ...account, status: "active" });
+    }
+  }
+  next.staff.forEach((member: any) => { member.status ||= "active"; });
+  return next;
+}
+
+async function initializeDb() {
+  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+    throw new Error("SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are required");
+  }
+  const response = await fetch(`${STATE_TABLE_ENDPOINT}?id=eq.1`, {
+    headers: {
+      apikey: SUPABASE_SERVICE_ROLE_KEY || "",
+      Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY || ""}`,
+    },
+  });
+  if (!response.ok) throw new Error(`Supabase request failed (${response.status}): ${await response.text()}`);
+  const rows = await response.json();
+  db = validateState(rows[0]?.state);
+  if (!rows[0]) await saveDb(db);
 }
 
 // Ensure public/uploads exists so we can save uploads
@@ -18,120 +77,25 @@ if (!fs.existsSync(UPLOADS_DIR)) {
   fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 }
 
-// Helper to load database
-function loadDb() {
-  try {
-    if (fs.existsSync(DB_PATH)) {
-      const raw = fs.readFileSync(DB_PATH, "utf-8");
-      const data = JSON.parse(raw);
-
-      let modified = false;
-
-      if (!data.staff || !Array.isArray(data.staff)) {
-        data.staff = [];
-        modified = true;
-      }
-      if (!data.orders || !Array.isArray(data.orders)) {
-        data.orders = [];
-        modified = true;
-      }
-      if (!data.menu || !Array.isArray(data.menu)) {
-        data.menu = [];
-        modified = true;
-      }
-      if (!data.images || !Array.isArray(data.images)) {
-        data.images = [];
-        modified = true;
-      }
-      if (!data.paymentAccounts || typeof data.paymentAccounts !== "object") {
-        data.paymentAccounts = {};
-        modified = true;
-      }
-      if (!data.settings || typeof data.settings !== "object") {
-        data.settings = { qrTargetUrl: "" };
-        modified = true;
-      }
-
-      const adminExists = data.staff.some((s: any) => s.username === "admin");
-      const waiterExists = data.staff.some((s: any) => s.username === "waiter");
-
-      if (!data.settings.qrTargetUrl) {
-        data.settings.qrTargetUrl = "";
-        modified = true;
-      }
-      if (!adminExists) {
-        data.staff.push({
-          id: "staff-1",
-          username: "admin",
-          password: "adminpassword",
-          role: "admin",
-          fullName: "Restaurant Admin",
-          status: "active",
-        });
-        modified = true;
-      }
-      if (!waiterExists) {
-        data.staff.push({
-          id: "staff-2",
-          username: "waiter",
-          password: "waiterpassword",
-          role: "waiter",
-          fullName: "Staff Waiter",
-          status: "active",
-        });
-        modified = true;
-      }
-
-      // Ensure all staff have a status
-      data.staff.forEach((s: any) => {
-        if (!s.status) {
-          s.status = "active";
-          modified = true;
-        }
-      });
-
-      if (modified) {
-        fs.writeFileSync(DB_PATH, JSON.stringify(data, null, 2), "utf-8");
-      }
-      return data;
-    }
-  } catch (err) {
-    console.error("Error reading database file, fallback to template:", err);
-  }
-  return {
-    menu: [],
-    orders: [],
-    staff: [
-      {
-        id: "staff-1",
-        username: "admin",
-        password: "adminpassword",
-        role: "admin",
-        fullName: "Restaurant Admin",
-        status: "active",
-      },
-      {
-        id: "staff-2",
-        username: "waiter",
-        password: "waiterpassword",
-        role: "waiter",
-        fullName: "Staff Waiter",
-        status: "active",
-      },
-    ],
-    paymentAccounts: {},
-    images: [],
-    settings: { qrTargetUrl: "" },
-  };
-}
+function loadDb() { return db; }
 
 // Helper to save database
-function saveDb(data: any) {
-  try {
-    fs.writeFileSync(DB_PATH, JSON.stringify(data, null, 2), "utf-8");
-  } catch (err) {
-    console.error("Error saving database file:", err);
-  }
+function saveDb(data: AppState) {
+  db = validateState(data);
+  return fetch(STATE_TABLE_ENDPOINT, {
+    method: "POST",
+    headers: {
+      apikey: SUPABASE_SERVICE_ROLE_KEY || "",
+      Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY || ""}`,
+      "Content-Type": "application/json",
+      Prefer: "resolution=merge-duplicates,return=minimal",
+    },
+    body: JSON.stringify({ id: 1, state: db }),
+  })
+    .then(async (response) => {
+      if (!response.ok) throw new Error(`Supabase save failed (${response.status}): ${await response.text()}`);
+    })
+    .catch((error) => console.error("Supabase save failed:", error));
 }
 
 // Multer storage configuration for local file uploads
@@ -150,6 +114,8 @@ const upload = multer({ storage });
 async function startServer() {
   const app = express();
   const PORT = 3000;
+
+  await initializeDb();
 
   // Body parsing middlewares
   app.use(express.json({ limit: "10mb" }));
